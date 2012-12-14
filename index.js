@@ -94,7 +94,7 @@ Bucker.prototype.middleware = function () {
             res.end = function (chunk, encoding) {
                 res.end = end;
                 res.end(chunk, encoding);
-                access.length = res.get('content-length') || 0;
+                access.length = res._headers['content-length'] || 0;
                 access.status = res.statusCode;
                 self.access(access);
             };

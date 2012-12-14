@@ -82,8 +82,8 @@ Bucker.prototype.middleware = function () {
     var self = this;
     return function (req, res, next) {
         var end, access = {};
-        if (self.options.access) {
-            access.remote_ip = req.ip || req.socket.socket.remoteAddress;
+        if (self.options.access || self.options.console) {
+            access.remote_ip = req.ip || req.socket.remoteAddress || req.socket.socket.remoteAddress;
             access.time = new Date();
             access.method = req.method;
             access.url = req.originalUrl || req.url;

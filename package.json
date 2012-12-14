@@ -1,0 +1,19 @@
+{
+  "name": "bucker",
+  "version": "0.0.1",
+  "description": "super easy logging module",
+  "main": "index.js",
+  "keywords": [
+    "log"
+  ],
+  "author": "Nathan LaFreniere <quitlahok@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "mkdirp": "",
+    "colors": ""
+  },
+  "devDependencies": {
+    "precommit-hook": "",
+    "express": ""
+  }
+}

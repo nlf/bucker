@@ -16,8 +16,8 @@ function openStream(file) {
     return fs.createWriteStream(file, { encoding: 'utf8', flags: 'a+' });
 }
 
-var Bucker = module.exports = function (opts) {
-    if (!(this instanceof Bucker)) return new Bucker(opts);
+var Bucker = module.exports = function (opts, mod) {
+    if (!(this instanceof Bucker)) return new Bucker(opts, mod);
     this.options = opts || {};
     if (this.options.access) this.accessFile = openStream(this.options.access);
     if (this.options.error) this.errorFile = openStream(this.options.error);
@@ -28,6 +28,7 @@ var Bucker = module.exports = function (opts) {
         }
     }
     this.options.console = typeof opts.console === 'boolean' ? opts.console : true;
+    if (!this.options.name && mod && mod.filename) this.options.name = path.basename(mod.filename, '.js');
 };
 
 Bucker.prototype._writeLog = function (level, line) {
@@ -37,7 +38,10 @@ Bucker.prototype._writeLog = function (level, line) {
         consoleItem,
         consoleTime,
         fileOutput = level === 'error' ? this.errorFile : this.appFile,
-        consoleOutput = level === 'error' ? console.error : console.log;
+        consoleOutput = level === 'error' ? console.error : console.log,
+        color = levels[level].color;
+
+    if (this.options.name) level = this.options.name + '.' + level;
 
     if (fileOutput) {
         fileItem = util.format('%s %s: %s\n', now.toISOString(), level, line);
@@ -46,7 +50,7 @@ Bucker.prototype._writeLog = function (level, line) {
     if (this.options.console) {
         consoleTime = now.toTimeString();
         consoleTime = consoleTime.slice(0, consoleTime.indexOf(' '));
-        consoleItem = util.format('%s %s: %s', consoleTime, level[levels[level].color], line);
+        consoleItem = util.format('%s %s: %s', consoleTime, level[color], line);
         consoleOutput(consoleItem);
     }
 };
@@ -69,11 +73,13 @@ Bucker.prototype.error = function () {
 
 Bucker.prototype.access = function (access) {
     var fileAccess = util.format('%s - - [%s] "%s %s HTTP/%s" %d %s "%s" "%s"\n', access.remote_ip, access.time.toUTCString(), access.method, access.url, access.http_ver, access.status, access.length, access.referer, access.agent),
+        level,
         consoleAccess,
         consoleTime = access.time.toTimeString();
     
     consoleTime = consoleTime.slice(0, consoleTime.indexOf(' '));
-    consoleAccess = consoleTime + ' access: '.grey + access.method + ' ' + access.url + ' ' + access.status;
+    level = this.options.name ? ' ' + this.options.name + '.access: ' : ' access: ';
+    consoleAccess = consoleTime + level.grey + access.method + ' ' + access.url + ' ' + access.status;
     if (this.accessFile) this.accessFile.write(fileAccess);
     if (this.options.console) console.log(consoleAccess);
 };

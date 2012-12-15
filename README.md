@@ -8,8 +8,7 @@ Usage
 =====
 
 ```javascript
-var Bucker = require('bucker'),
-    logger = Bucker(opts, module);
+var logger = require('bucker').createLogger(opts, module);
 
 logger.info('informational message');
 logger.debug('debug message');

@@ -1,7 +1,6 @@
 var express = require('express'),
     app = express(),
-    bucker = require('./index'),
-    logger = bucker({ access: 'access.log', error: 'error.log', app: 'app.log', console: true }, module);
+    logger = require('./index').createLogger({ access: 'access.log', error: 'error.log', app: 'app.log', console: true }, module);
 
 app.use(logger.middleware());
 

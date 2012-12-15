@@ -16,9 +16,11 @@ function openStream(file) {
     return fs.createWriteStream(file, { encoding: 'utf8', flags: 'a+' });
 }
 
-var Bucker = module.exports = function (opts, mod) {
-    if (!(this instanceof Bucker)) return new Bucker(opts, mod);
-    this.options = opts || {};
+var Bucker = function (opts, mod) {
+    this.options = {};
+    Object.getOwnPropertyNames(opts).forEach(function (key) {
+        this.options[key] = opts[key];
+    });
     if (this.options.access) this.accessFile = openStream(this.options.access);
     if (this.options.error) this.errorFile = openStream(this.options.error);
     if (this.options.app) this.appFile = openStream(this.options.app);
@@ -29,6 +31,10 @@ var Bucker = module.exports = function (opts, mod) {
     }
     this.options.console = typeof opts.console === 'boolean' ? opts.console : true;
     if (!this.options.name && mod && mod.filename) this.options.name = path.basename(mod.filename, '.js');
+};
+
+exports.createLogger = function (opts, mod) {
+    return new Bucker(opts, mod);
 };
 
 Bucker.prototype._writeLog = function (level, line) {

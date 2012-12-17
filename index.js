@@ -17,20 +17,21 @@ function openStream(file) {
 }
 
 var Bucker = function (opts, mod) {
-    this.options = {};
+    var self = this;
+    self.options = {};
     Object.getOwnPropertyNames(opts).forEach(function (key) {
-        this.options[key] = opts[key];
+        self.options[key] = opts[key];
     });
-    if (this.options.access) this.accessFile = openStream(this.options.access);
-    if (this.options.error) this.errorFile = openStream(this.options.error);
-    if (this.options.app) this.appFile = openStream(this.options.app);
-    if (this.options.level) {
-        if (~Object.getOwnPropertyNames(levels).indexOf(this.options.level)) {
-            this.options.level = levels[this.options.level].num;
+    if (self.options.access) self.accessFile = openStream(self.options.access);
+    if (self.options.error) self.errorFile = openStream(self.options.error);
+    if (self.options.app) self.appFile = openStream(self.options.app);
+    if (self.options.level) {
+        if (~Object.getOwnPropertyNames(levels).indexOf(self.options.level)) {
+            self.options.level = levels[self.options.level].num;
         }
     }
-    this.options.console = typeof opts.console === 'boolean' ? opts.console : true;
-    if (!this.options.name && mod && mod.filename) this.options.name = path.basename(mod.filename, '.js');
+    self.options.console = typeof opts.console === 'boolean' ? opts.console : true;
+    if (!self.options.name && mod && mod.filename) self.options.name = path.basename(mod.filename, '.js');
 };
 
 exports.createLogger = function (opts, mod) {

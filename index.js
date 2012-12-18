@@ -1,5 +1,6 @@
 var fs = require('fs'),
     path = require('path'),
+    dgram = require('dgram'),
     util = require('util'),
     mkdirp = require('mkdirp'),
     colors = require('colors'),
@@ -32,6 +33,16 @@ var Bucker = function (opts, mod) {
     }
     self.options.console = typeof opts.console === 'boolean' ? opts.console : true;
     if (!self.options.name && mod && mod.filename) self.options.name = path.basename(mod.filename, '.js');
+    if (self.options.udp) {
+        self.udpClient = dgram.createSocket('udp4');
+        if (~self.options.udp.indexOf(':')) {
+            self.options.udp_host = self.options.udp.slice(0, self.options.udp.indexOf(':'));
+            self.options.udp_port = self.options.udp.slice(self.options.udp.indexOf(':') + 1);
+        } else {
+            self.options.udp_host = self.options.udp;
+            self.options.udp_port = 514;
+        }
+    }
 };
 
 exports.createLogger = function (opts, mod) {
@@ -44,22 +55,22 @@ Bucker.prototype._writeLog = function (level, line) {
         fileItem,
         consoleItem,
         consoleTime,
+        udpItem,
         fileOutput = level === 'error' ? this.errorFile : this.appFile,
         consoleOutput = level === 'error' ? console.error : console.log,
         color = levels[level].color;
 
     if (this.options.name) level = this.options.name + '.' + level;
 
-    if (fileOutput) {
-        fileItem = util.format('%s %s: %s\n', now.toISOString(), level, line);
-        fileOutput.write(fileItem);
-    }
-    if (this.options.console) {
-        consoleTime = now.toTimeString();
-        consoleTime = consoleTime.slice(0, consoleTime.indexOf(' '));
-        consoleItem = util.format('%s %s: %s', consoleTime, level[color], line);
-        consoleOutput(consoleItem);
-    }
+    fileItem = util.format('%s %s: %s\n', now.toISOString(), level, line);
+    udpItem = new Buffer(fileItem);
+    consoleTime = now.toTimeString();
+    consoleTime = consoleTime.slice(0, consoleTime.indexOf(' '));
+    consoleItem = util.format('%s %s: %s', consoleTime, level[color], line);
+
+    if (fileOutput) fileOutput.write(fileItem);
+    if (this.options.console) consoleOutput(consoleItem);
+    if (this.udpClient) this.udpClient.send(udpItem, 0, udpItem.length, this.options.udp_port, this.options.udp_host);
 };
 
 Bucker.prototype.log = Bucker.prototype.info = function () {

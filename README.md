@@ -39,3 +39,4 @@ Options
 * console - boolean specifying if we should print to console or not.
 * level - minimum level to log, this can be specified as a string (i.e. 'error') or as a number (i.e. 3). items that are below this level will not be logged.
 * name - name to use when namespacing logs. note that this will override the module reference if one is passed.
+* udp - a host:port combination to send logs to via UDP (e.g. 'localhost:6500'). port defaults to 514 if not specified.

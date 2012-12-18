@@ -1,10 +1,10 @@
 var express = require('express'),
     app = express(),
-    logger = require('./index').createLogger({ access: 'access.log', error: 'error.log', app: 'app.log', console: true }, module);
+    logger = require('./index').createLogger({ access: 'access.log', error: 'error.log', app: 'app.log', console: true, udp: 'localhost:6565' }, module);
 
 app.use(logger.middleware());
 
-app.get('/', function (req, res) {
+app.get('*', function (req, res) {
     logger.log('log works as info');
     logger.info('so does info');
     logger.debug('we can also debug');

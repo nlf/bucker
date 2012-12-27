@@ -1,6 +1,6 @@
 var express = require('express'),
     app = express(),
-    logger = require('./index').createLogger({ access: 'access.log', error: 'error.log', app: 'app.log', console: true, udp: 'localhost:6565' }, module);
+    logger = require('./index').createLogger({ access: 'access.log', error: 'error.log', app: 'app.log', console: true }, module);
 
 app.use(logger.middleware());
 

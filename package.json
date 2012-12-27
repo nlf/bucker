@@ -1,6 +1,6 @@
 {
   "name": "bucker",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "super easy logging module",
   "main": "index.js",
   "keywords": [
@@ -10,7 +10,8 @@
   "license": "MIT",
   "dependencies": {
     "mkdirp": "",
-    "colors": ""
+    "colors": "",
+    "moment": ""
   },
   "devDependencies": {
     "precommit-hook": "",

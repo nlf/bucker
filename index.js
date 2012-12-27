@@ -1,128 +1,208 @@
-var fs = require('fs'),
-    path = require('path'),
-    dgram = require('dgram'),
+var path = require('path'),
     util = require('util'),
-    mkdirp = require('mkdirp'),
-    colors = require('colors'),
+    moment = require('moment'),
+    Console = require('./lib/console'),
+    File = require('./lib/file'),
+    Syslog = require('./lib/syslog'),
+    types = ['console', 'file', 'syslog'],
     levels = {
-        'debug': { num: 0, color: 'blue' },
-        'info': { num: 1, color: 'green' },
-        'warn': { num: 2, color: 'yellow' },
-        'error': { num: 3, color: 'red' }
-    };
-
-function openStream(file) {
-    var dir = path.dirname(file);
-    mkdirp.sync(dir);
-    return fs.createWriteStream(file, { encoding: 'utf8', flags: 'a+' });
-}
+    debug: { num: 0, color: 'blue' },
+    info: { num: 1, color: 'green' },
+    warn: { num: 2, color: 'yellow' },
+    error: { num: 3, color: 'red' },
+    reverse: ['debug', 'info', 'warn', 'error']
+};
 
 var Bucker = function (opts, mod) {
-    var self = this;
+    var self = this,
+        file,
+        host;
+
     self.options = {};
-    Object.getOwnPropertyNames(opts).forEach(function (key) {
-        self.options[key] = opts[key];
+    self.files = {};
+    self.syslog = {};
+    self.console = {};
+    self.handlers = { access: {}, debug: {}, info: {}, warn: {}, error: {} };
+    self.loggers = [];
+    self.name = '';
+
+    if (typeof opts === 'undefined') opts = {};
+
+    if (opts.hasOwnProperty('level')) {
+        if (typeof opts.level === 'string') {
+            if (levels.hasOwnProperty(opts.level)) self.level = levels[opts.level];
+        } else if (typeof opts.level === 'number') {
+            if (opts.level <= 3 && opts.level >= 0) self.level = opts.level;
+        }
+    }
+
+    if (opts.hasOwnProperty('name') || (mod && mod.filename)) self.name = opts.name || path.basename(mod.filename, '.js');
+
+    if (opts.hasOwnProperty('app')) {
+        self._setDefaultHandler(opts.app, 'file');
+    } else {
+        self._setDefaultHandler(false, 'file');
+    }
+
+    if (opts.hasOwnProperty('console')) {
+        self._setDefaultHandler(opts.console, 'console');
+    } else {
+        self._setDefaultHandler(true, 'console');
+    }
+
+    if (opts.hasOwnProperty('syslog')) {
+        self._setDefaultHandler(opts.syslog, 'syslog');
+    } else {
+        self._setDefaultHandler(false, 'syslog');
+    }
+
+    if (opts.hasOwnProperty('access')) self._setHandler(opts.access, 'access');
+    if (opts.hasOwnProperty('debug')) self._setHandler(opts.debug, 'debug');
+    if (opts.hasOwnProperty('info')) self._setHandler(opts.info, 'info');
+    if (opts.hasOwnProperty('warn')) self._setHandler(opts.warn, 'warn');
+    if (opts.hasOwnProperty('error')) self._setHandler(opts.error, 'error');
+};
+
+Bucker.prototype._setDefaultHandler = function (options, type) {
+    var self = this,
+        handler,
+        hash,
+        loglevels = levels.reverse.concat(['access']);
+
+    if (options === false) {
+        handler = false;
+    } else {
+        if (self.name) options.name = self.name;
+        if (type === 'file') {
+            hash = typeof options === 'string' ? options : JSON.stringify(options);
+            self.files[hash] = self.loggers.push(File(options)) - 1;
+            handler = self.files[hash];
+        } else if (type === 'console') {
+            hash = typeof options === 'boolean' ? options.toString() : JSON.stringify(options);
+            self.console[hash] = self.loggers.push(Console(options)) - 1;
+            handler = self.console[hash];
+        } else if (type === 'syslog') {
+            hash = typeof options === 'string' ? options : JSON.stringify(options);
+            self.syslog[hash] = self.loggers.push(Syslog(options)) - 1;
+            handler = self.syslog[hash];
+        }
+    }
+    loglevels.forEach(function (level) {
+        self.handlers[level][type] = handler;
     });
-    if (self.options.access) self.accessFile = openStream(self.options.access);
-    if (self.options.error) self.errorFile = openStream(self.options.error);
-    if (self.options.app) self.appFile = openStream(self.options.app);
-    if (self.options.level) {
-        if (~Object.getOwnPropertyNames(levels).indexOf(self.options.level)) {
-            self.options.level = levels[self.options.level].num;
+};
+
+Bucker.prototype._setHandler = function (options, level) {
+    var self = this,
+        hash;
+
+    if (options === false) self.handlers[level] = false;
+
+    if (self.name) options.name = self.name;
+
+    if (typeof options === 'string') {
+        hash = path.resolve(options);
+        if (!self.files.hasOwnProperty(hash)) self.files[hash] = self.loggers.push(File(options)) - 1;
+        self.handlers[level].file = self.files[hash];
+    } else {
+        if (options.hasOwnProperty('file')) {
+            if (options.file === false) {
+                self.handlers[level].file = false;
+            } else {
+                if (self.name) options.file.name = self.name;
+                hash = path.resolve(typeof options.file === 'string' ? options.file : JSON.stringify(options.file));
+                if (!self.files.hasOwnProperty(hash)) self.files[hash] = self.loggers.push(File(options.file)) - 1;
+                self.handlers[level].file = self.files[hash];
+            }
+        }
+        if (options.hasOwnProperty('console')) {
+            if (options.console === false) {
+                self.handlers[level].console = false;
+            } else {
+                if (self.name) options.console.name = self.name;
+                hash = typeof options.console === 'boolean' ? options.console.toString() : JSON.stringify(options.console);
+                if (!self.console.hasOwnProperty(hash)) self.console[hash] = self.loggers.push(Console(options.console)) - 1;
+                self.handlers[level].console = self.console[hash];
+            }
+        }
+        if (options.hasOwnProperty('syslog')) {
+            if (options.syslog === false) {
+                self.handlers[level].syslog = false;
+            } else {
+                if (self.name) options.syslog.name = self.name;
+                hash = typeof options.syslog === 'string' ? options.syslog : JSON.stringify(options.syslog);
+                if (!self.syslog.hasOwnProperty(hash)) self.syslog[hash] = self.loggers.push(Syslog(options.syslog)) - 1;
+                self.handlers[level].syslog = self.syslog[hash];
+            }
         }
     }
-    self.options.console = typeof opts.console === 'boolean' ? opts.console : true;
-    if (!self.options.name && mod && mod.filename) self.options.name = path.basename(mod.filename, '.js');
-    if (self.options.udp) {
-        self.udpClient = dgram.createSocket('udp4');
-        if (~self.options.udp.indexOf(':')) {
-            self.options.udp_host = self.options.udp.slice(0, self.options.udp.indexOf(':'));
-            self.options.udp_port = self.options.udp.slice(self.options.udp.indexOf(':') + 1);
-        } else {
-            self.options.udp_host = self.options.udp;
-            self.options.udp_port = 514;
-        }
-    }
 };
 
-exports.createLogger = function (opts, mod) {
-    return new Bucker(opts, mod);
+Bucker.prototype._findHandler = function (level, type) {
+    return this.loggers[this.handlers[level][type]];
 };
 
-Bucker.prototype._writeLog = function (level, line) {
-    if (this.options.level > levels[level].num) return;
-    var now = new Date(),
-        fileItem,
-        consoleItem,
-        consoleTime,
-        udpItem,
-        fileOutput = level === 'error' ? this.errorFile : this.appFile,
-        consoleOutput = level === 'error' ? console.error : console.log,
-        color = levels[level].color;
+Bucker.prototype._runHandlers = function (level, data) {
+    var self = this,
+        handler;
 
-    if (this.options.name) level = this.options.name + '.' + level;
-
-    fileItem = util.format('%s %s: %s\n', now.toISOString(), level, line);
-    udpItem = new Buffer(fileItem);
-    consoleTime = now.toTimeString();
-    consoleTime = consoleTime.slice(0, consoleTime.indexOf(' '));
-    consoleItem = util.format('%s %s: %s', consoleTime, level[color], line);
-
-    if (fileOutput) fileOutput.write(fileItem);
-    if (this.options.console) consoleOutput(consoleItem);
-    if (this.udpClient) this.udpClient.send(udpItem, 0, udpItem.length, this.options.udp_port, this.options.udp_host);
-};
-
-Bucker.prototype.log = Bucker.prototype.info = function () {
-    this._writeLog('info', util.format.apply(this, arguments));
+    if (levels[level].num < self.level) return;
+    types.forEach(function (type) {
+        handler = self._findHandler(level, type);
+        if (handler) handler.log(moment(), level, data);
+    });
 };
 
 Bucker.prototype.debug = function () {
-    this._writeLog('debug', util.format.apply(this, arguments));
+    this._runHandlers('debug', util.format.apply(this, arguments));
+};
+
+Bucker.prototype.log = Bucker.prototype.info = function () {
+    this._runHandlers('info', util.format.apply(this, arguments));
 };
 
 Bucker.prototype.warn = function () {
-    this._writeLog('warn', util.format.apply(this, arguments));
+    this._runHandlers('warn', util.format.apply(this, arguments));
 };
 
 Bucker.prototype.error = function () {
-    this._writeLog('error', util.format.apply(this, arguments));
+    this._runHandlers('error', util.format.apply(this, arguments));
 };
 
-Bucker.prototype.access = function (access) {
-    var fileAccess = util.format('%s - - [%s] "%s %s HTTP/%s" %d %s "%s" "%s"\n', access.remote_ip, access.time.toUTCString(), access.method, access.url, access.http_ver, access.status, access.length, access.referer, access.agent),
-        level,
-        consoleAccess,
-        consoleTime = access.time.toTimeString();
-    
-    consoleTime = consoleTime.slice(0, consoleTime.indexOf(' '));
-    level = this.options.name ? ' ' + this.options.name + '.access: ' : ' access: ';
-    consoleAccess = consoleTime + level.grey + access.method + ' ' + access.url + ' ' + access.status;
-    if (this.accessFile) this.accessFile.write(fileAccess);
-    if (this.options.console) console.log(consoleAccess);
+Bucker.prototype.access = function (data) {
+    var self = this,
+        handler;
+
+    data.time = moment(data.time);
+    types.forEach(function (type) {
+        handler = self._findHandler('access', type);
+        if (handler) handler.access(data);
+    });
 };
 
 Bucker.prototype.middleware = function () {
     var self = this;
     return function (req, res, next) {
         var end, access = {};
-        if (self.options.access || self.options.console) {
-            access.remote_ip = req.ip || req.socket.remoteAddress || req.socket.socket.remoteAddress;
-            access.time = new Date();
-            access.method = req.method;
-            access.url = req.originalUrl || req.url;
-            access.http_ver = req.httpVersion;
-            access.referer = req.headers.referer || req.headers.referrer || '-';
-            access.agent = req.headers['user-agent'];
-            end = res.end;
-            res.end = function (chunk, encoding) {
-                res.end = end;
-                res.end(chunk, encoding);
-                access.length = res._headers['content-length'] || 0;
-                access.status = res.statusCode;
-                self.access(access);
-            };
-        }
+        access.remote_ip = req.ip || req.socket.remoteAddress || req.socket.socket.remoteAddress;
+        access.time = new Date();
+        access.method = req.method;
+        access.url = req.originalUrl || req.url;
+        access.http_ver = req.httpVersion;
+        access.referer = req.headers.referer || req.headers.referrer || '-';
+        access.agent = req.headers['user-agent'];
+        end = res.end;
+        res.end = function (chunk, encoding) {
+            res.end = end;
+            res.end(chunk, encoding);
+            access.length = res._headers['content-length'] || 0;
+            access.status = res.statusCode;
+            self.access(access);
+        };
         next();
     };
+};
+
+exports.createLogger = function (options, mod) {
+    return new Bucker(options, mod);
 };

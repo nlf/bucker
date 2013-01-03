@@ -35,6 +35,7 @@ var Bucker = function (opts, mod) {
             if (opts.level <= 3 && opts.level >= 0) self.level = opts.level;
         }
     }
+    if (!self.hasOwnProperty('level')) self.level = 0;
 
     if (opts.hasOwnProperty('name') || (mod && mod.filename)) self.name = opts.name || path.basename(mod.filename, '.js');
 

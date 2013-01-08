@@ -1,5 +1,7 @@
 var express = require('express'),
     app = express(),
+    repl = require('repl'),
+    net = require('net'),
     logger = require('./index').createLogger({ access: 'access.log', error: 'error.log', app: 'app.log', console: true }, module);
 
 app.use(logger.middleware());
@@ -14,5 +16,18 @@ app.get('*', function (req, res) {
     res.send('hello world');
     logger.info('and we can add metadata', { useful: true, verbose: 'definitely' });
 });
+
+net.createServer(function (socket) {
+    var r = repl.start({
+        prompt: '> ',
+        input: socket,
+        output: socket,
+        terminal: true,
+        useGlobal: false
+    });
+    r.on('exit', function () {
+        socket.end();
+    });
+}).listen('./example.sock');
 
 app.listen(8000);

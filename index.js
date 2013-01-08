@@ -62,6 +62,10 @@ var Bucker = function (opts, mod) {
     if (opts.hasOwnProperty('info')) self._setHandler(opts.info, 'info');
     if (opts.hasOwnProperty('warn')) self._setHandler(opts.warn, 'warn');
     if (opts.hasOwnProperty('error')) self._setHandler(opts.error, 'error');
+
+    process.on('setLogLevel', function (level) {
+        self.level = typeof level === 'number' ? level : levels[level];
+    });
 };
 
 Bucker.prototype._setDefaultHandler = function (options, type) {

@@ -73,18 +73,17 @@ Bucker.prototype._setDefaultHandler = function (options, type) {
     if (options === false) {
         handler = false;
     } else {
-        if (self.name) options.name = self.name;
         if (type === 'file') {
             hash = typeof options === 'string' ? options : JSON.stringify(options);
-            self.files[hash] = self.loggers.push(File(options)) - 1;
+            self.files[hash] = self.loggers.push(File(options, options.name || self.name)) - 1;
             handler = self.files[hash];
         } else if (type === 'console') {
             hash = typeof options === 'boolean' ? options.toString() : JSON.stringify(options);
-            self.console[hash] = self.loggers.push(Console(options)) - 1;
+            self.console[hash] = self.loggers.push(Console(options, options.name || self.name)) - 1;
             handler = self.console[hash];
         } else if (type === 'syslog') {
             hash = typeof options === 'string' ? options : JSON.stringify(options);
-            self.syslog[hash] = self.loggers.push(Syslog(options)) - 1;
+            self.syslog[hash] = self.loggers.push(Syslog(options, options.name || self.name)) - 1;
             handler = self.syslog[hash];
         }
     }
@@ -99,20 +98,17 @@ Bucker.prototype._setHandler = function (options, level) {
 
     if (options === false) self.handlers[level] = false;
 
-    if (self.name) options.name = self.name;
-
     if (typeof options === 'string') {
         hash = path.resolve(options);
-        if (!self.files.hasOwnProperty(hash)) self.files[hash] = self.loggers.push(File(options)) - 1;
+        if (!self.files.hasOwnProperty(hash)) self.files[hash] = self.loggers.push(File(options, self.name)) - 1;
         self.handlers[level].file = self.files[hash];
     } else {
         if (options.hasOwnProperty('file')) {
             if (options.file === false) {
                 self.handlers[level].file = false;
             } else {
-                if (self.name) options.file.name = self.name;
                 hash = path.resolve(typeof options.file === 'string' ? options.file : JSON.stringify(options.file));
-                if (!self.files.hasOwnProperty(hash)) self.files[hash] = self.loggers.push(File(options.file)) - 1;
+                if (!self.files.hasOwnProperty(hash)) self.files[hash] = self.loggers.push(File(options.file, options.file.name || self.name)) - 1;
                 self.handlers[level].file = self.files[hash];
             }
         }
@@ -120,9 +116,8 @@ Bucker.prototype._setHandler = function (options, level) {
             if (options.console === false) {
                 self.handlers[level].console = false;
             } else {
-                if (self.name) options.console.name = self.name;
                 hash = typeof options.console === 'boolean' ? options.console.toString() : JSON.stringify(options.console);
-                if (!self.console.hasOwnProperty(hash)) self.console[hash] = self.loggers.push(Console(options.console)) - 1;
+                if (!self.console.hasOwnProperty(hash)) self.console[hash] = self.loggers.push(Console(options.console, options.console.name || self.name)) - 1;
                 self.handlers[level].console = self.console[hash];
             }
         }
@@ -130,9 +125,8 @@ Bucker.prototype._setHandler = function (options, level) {
             if (options.syslog === false) {
                 self.handlers[level].syslog = false;
             } else {
-                if (self.name) options.syslog.name = self.name;
                 hash = typeof options.syslog === 'string' ? options.syslog : JSON.stringify(options.syslog);
-                if (!self.syslog.hasOwnProperty(hash)) self.syslog[hash] = self.loggers.push(Syslog(options.syslog)) - 1;
+                if (!self.syslog.hasOwnProperty(hash)) self.syslog[hash] = self.loggers.push(Syslog(options.syslog, options.syslog.name || self.name)) - 1;
                 self.handlers[level].syslog = self.syslog[hash];
             }
         }

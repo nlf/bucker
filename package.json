@@ -1,6 +1,6 @@
 {
   "name": "bucker",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "super easy logging module",
   "main": "index.js",
   "keywords": [

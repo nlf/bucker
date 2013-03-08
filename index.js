@@ -182,16 +182,21 @@ Bucker.prototype.access = function (data) {
 Bucker.prototype.middleware = function () {
     var self = this;
     return function (req, res, next) {
-        var end, access = {};
-        access.remote_ip = req.ip || req.socket.remoteAddress || req.socket.socket.remoteAddress;
-        access.time = new Date();
-        access.method = req.method;
-        access.url = req.originalUrl || req.url;
-        access.http_ver = req.httpVersion;
-        access.referer = req.headers.referer || req.headers.referrer || '-';
-        access.agent = req.headers['user-agent'];
-        end = res.end;
+        var access = {
+            remote_ip: req.ip || req.socket.remoteAddress || req.socket.socket.remoteAddress,
+            time: new Date(),
+            method: req.method,
+            url: req.originalUrl || req.url,
+            http_ver: req.httpVersion,
+            referer: req.headers.referer || req.headers.referrer || '-',
+            agent: req.headers['user-agent'],
+            length: 0,
+            status: 0,
+            response_time: Date.now()
+        };
+        var end = res.end;
         res.end = function (chunk, encoding) {
+            access.response_time = String(Date.now() - access.response_time) + "ms";
             res.end = end;
             res.end(chunk, encoding);
             access.length = res._headers['content-length'] || 0;

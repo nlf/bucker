@@ -10,7 +10,8 @@ var path = require('path'),
     info: { num: 1, color: 'green' },
     warn: { num: 2, color: 'yellow' },
     error: { num: 3, color: 'red' },
-    reverse: ['debug', 'info', 'warn', 'error']
+    exception: { num: 4, color: 'red' },
+    reverse: ['debug', 'info', 'warn', 'error', 'exception']
 };
 
 var Bucker = function (opts, mod) {
@@ -22,11 +23,13 @@ var Bucker = function (opts, mod) {
     self.files = {};
     self.syslog = {};
     self.console = {};
-    self.handlers = { access: {}, debug: {}, info: {}, warn: {}, error: {} };
+    self.handlers = { access: {}, debug: {}, info: {}, warn: {}, error: {}, exception: {} };
     self.loggers = [];
     self.name = '';
 
     if (typeof opts === 'undefined') opts = {};
+
+    self.handleExceptions = opts.hasOwnProperty('handleExceptions') ? opts.handleExceptions : true;
 
     if (opts.hasOwnProperty('level')) {
         if (typeof opts.level === 'string') {
@@ -61,11 +64,21 @@ var Bucker = function (opts, mod) {
     if (opts.hasOwnProperty('debug')) self._setHandler(opts.debug, 'debug');
     if (opts.hasOwnProperty('info')) self._setHandler(opts.info, 'info');
     if (opts.hasOwnProperty('warn')) self._setHandler(opts.warn, 'warn');
-    if (opts.hasOwnProperty('error')) self._setHandler(opts.error, 'error');
+    if (opts.hasOwnProperty('error')) {
+        self._setHandler(opts.error, 'error');
+        self._setHandler(opts.error, 'exception');
+    }
 
     process.on('setLogLevel', function (level) {
         self.level = typeof level === 'number' ? level : levels[level];
     });
+
+    if (self.handleExceptions) {
+        process.on('uncaughtException', function (err) {
+            self.exception(err);
+            process.exit(1);
+        });
+    }
 };
 
 Bucker.prototype._setDefaultHandler = function (options, type) {
@@ -152,6 +165,16 @@ Bucker.prototype._runHandlers = function (level, data) {
     });
 };
 
+Bucker.prototype.exception = function (err) {
+    var self = this,
+        handler;
+
+    types.forEach(function (type) {
+        handler = self._findHandler('exception', type);
+        if (handler) handler.exception(moment(), err);
+    });
+};
+
 Bucker.prototype.debug = function () {
     this._runHandlers('debug', util.format.apply(this, arguments));
 };
@@ -204,6 +227,14 @@ Bucker.prototype.middleware = function () {
             self.access(access);
         };
         next();
+    };
+};
+
+Bucker.prototype.errorHandler = function (opts) {
+    var self = this;
+    return function (err, req, res, next) {
+        self.exception(err);
+        return next(err);
     };
 };
 

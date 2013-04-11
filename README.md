@@ -29,6 +29,12 @@ Included in the logger is a middleware for connect/express that writes access lo
 app.use(logger.middleware());
 ```
 
+Also included is an error handling middleware. It logs the error appropriately as an exception, then continues to the next step in the middleware chain
+
+```javascript
+app.use(logger.errorHandler());
+```
+
 
 Options
 =======
@@ -40,6 +46,7 @@ Options
 * syslog - a host:port combination to send logs to via syslog (e.g. 'localhost:6500'). port defaults to 514 if not specified. this may also be specified as an object, as in { host: 'localhost', port: 514 }
 * level - minimum level to log, this can be specified as a string (i.e. 'error') or as a number (i.e. 3). items that are below this level will not be logged.
 * name - name to use when namespacing logs. note that this will override the module reference if one is passed.
+* handleExceptions - a boolean to indicate whether or not we should add an uncaughtException handler. the handler will log the event as an exception, then process.exit(1).
 
 
 The above list describes the most basic usage of each option. Below, I've written out an example config object that shows all available options.

@@ -5,8 +5,10 @@ var express = require('express'),
     logger = require('./index').createLogger({ access: 'access.log', error: 'error.log', app: 'app.log', console: true }, module);
 
 app.use(logger.middleware());
+app.use(app.router);
+app.use(logger.errorHandler());
 
-app.get('*', function (req, res) {
+app.get('*', function (req, res, next) {
     logger.log('log works as info');
     logger.info('so does info');
     logger.debug('we can also debug');
@@ -15,6 +17,7 @@ app.get('*', function (req, res) {
     logger.info('also, access logs via middleware');
     res.send('hello world');
     logger.info('and we can add metadata', { useful: true, verbose: 'definitely' });
+    throw new Error('and catch thrown errors');
 });
 
 net.createServer(function (socket) {

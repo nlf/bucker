@@ -232,7 +232,7 @@ Bucker.prototype.middleware = function () {
 
 Bucker.prototype.hapi = function () {
     return function (request, next) {
-        Bucker.prototype.middleware.call(request.raw.req, request.raw.res, next);
+        Bucker.prototype.middleware().call(request.raw.req, request.raw.res, next);
     };
 };
 

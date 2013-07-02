@@ -231,8 +231,9 @@ Bucker.prototype.middleware = function () {
 };
 
 Bucker.prototype.hapi = function () {
+    var self = this;
     return function (request, next) {
-        Bucker.prototype.middleware().call(request.raw.req, request.raw.res, next);
+        return self.middleware()(request.raw.req, request.raw.res, next);
     };
 };
 

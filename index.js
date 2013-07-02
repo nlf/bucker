@@ -230,6 +230,12 @@ Bucker.prototype.middleware = function () {
     };
 };
 
+Bucker.prototype.hapi = function () {
+    return function (request, next) {
+        Bucker.middleware.call(request.raw.req, request.raw.res, next);
+    };
+};
+
 Bucker.prototype.errorHandler = function (opts) {
     var self = this;
     return function (err, req, res, next) {

@@ -245,6 +245,20 @@ Bucker.prototype.errorHandler = function (opts) {
     };
 };
 
+// Hapi plugin
+exports.register = function (server, options, next) {
+    if (typeof server.ext === 'function') {
+        if (options instanceof Bucker) {
+            server.ext('onRequest', options.hapi());
+        } else {
+            server.ext('onRequest', new Bucker(options).hapi());
+        }
+    } else {
+        throw new Error("The Bucker Hapi plugin requires the permission 'ext' to be true");
+    }
+    return next();
+};
+
 exports.createLogger = function (options, mod) {
     return new Bucker(options, mod);
 };

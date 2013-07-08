@@ -254,11 +254,7 @@ exports.register = function (server, options, next) {
         bucker = options;
         options = bucker.options;
     } else {
-        if (options.hapi) {
-            bucker = new Bucker(options.bucker);
-        } else {
-            bucker = new Bucker(options);
-        }
+        bucker = new Bucker(options);
     }
     server.ext('onRequest', bucker.hapi());
     // add listener by default but dont if its false

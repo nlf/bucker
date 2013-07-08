@@ -247,38 +247,55 @@ Bucker.prototype.errorHandler = function (opts) {
 
 // Hapi plugin
 exports.register = function (server, options, next) {
-    if (typeof server.ext === 'function') {
-        // get/make bucker object
-        var bucker;
-        if (options instanceof Bucker) {
-            bucker = options;
-            options = bucker.options;
-        } else {
-            if (options.hapi) {
-                bucker = new Bucker(options.bucker);
-            } else {
-                bucker = new Bucker(options);
-            }
-        }
-        server.ext('onRequest', bucker.hapi());
-        // add listener by default but dont if its false
-        if (!options.hapi || (options.hapi && options.hapi.handleLog)) {
-            server.events.on('log', function (event, tags) {
-                if (tags.error) {
-                    return bucker.error(event.tags, event.data);
-                } else if (tags.warn || tags.warning) {
-                    return bucker.warn(event.tags, event.data);
-                } else if (tags.debug) {
-                    return bucker.debug(event.tags, event.data);
-                } else if (tags.info) {
-                    return bucker.info(event.tags, event.data);
-                } else {
-                    return bucker.log(event.tags, event.data);
-                }
-            });
-        }
+    if (typeof server.ext !== 'function') throw new Error("The Bucker Hapi plugin requires the permission 'ext' to be true");
+    // get/make bucker object
+    var bucker;
+    if (options instanceof Bucker) {
+        bucker = options;
+        options = bucker.options;
     } else {
-        throw new Error("The Bucker Hapi plugin requires the permission 'ext' to be true");
+        if (options.hapi) {
+            bucker = new Bucker(options.bucker);
+        } else {
+            bucker = new Bucker(options);
+        }
+    }
+    server.ext('onRequest', bucker.hapi());
+    // add listener by default but dont if its false
+    if (!options.hapi || (options.hapi && options.hapi.handleLog)) {
+        server.events.on('log', function (event, tags) {
+            if (tags.error) {
+                var tag = event.tags.splice(event.tags.indexOf("error"));
+                if (tag.length === 0) {
+                    return bucker.error(event.data);
+                } else {
+                    return bucker.error(tag, event.data);
+                }
+            } else if (tags.warn) {
+                var tag = event.tags.splice(event.tags.indexOf("warn"));
+                if (tag.length === 0) {
+                    return bucker.error(event.data);
+                } else {
+                    return bucker.info(event.tags, event.data);
+                }
+            } else if (tags.debug) {
+                var tag = event.tags.splice(event.tags.indexOf("debug"));
+                if (tag.length === 0) {
+                    return bucker.error(event.data);
+                } else {
+                    return bucker.info(event.tags, event.data);
+                }
+            } else if (tags.info) {
+                var tag = event.tags.splice(event.tags.indexOf("info"));
+                if (tag.length === 0) {
+                    return bucker.error(event.data);
+                } else {
+                    return bucker.info(event.tags, event.data);
+                }
+            } else {
+                return bucker.log(event.tags, event.data);
+            }
+        });
     }
     return next();
 };

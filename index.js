@@ -293,6 +293,7 @@ exports.register = function (server, options, next) {
             }
         });
     }
+    server.app.bucker = bucker;
     return next();
 };
 

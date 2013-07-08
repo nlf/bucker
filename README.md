@@ -29,7 +29,13 @@ Included in the logger is a middleware for connect/express that writes access lo
 app.use(logger.middleware());
 ```
 
-Also included is an error handling middleware. It logs the error appropriately as an exception, then continues to the next step in the middleware chain
+In addition to the connect middleware, bucker also exports a middleware for Hapi. To use it, extend the onRequest event of your server, for example..
+
+```javascript
+server.ext('onRequest', logger.hapi());
+```
+
+Also included is a generic error handling middleware for connect. It logs the error appropriately as an exception, then continues to the next step in the middleware chain
 
 ```javascript
 app.use(logger.errorHandler());

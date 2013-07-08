@@ -265,30 +265,30 @@ exports.register = function (server, options, next) {
     if (!options.hapi || (options.hapi && options.hapi.handleLog)) {
         server.events.on('log', function (event, tags) {
             if (tags.error) {
-                var tag = event.tags.splice(event.tags.indexOf("error"));
-                if (tag.length === 0) {
+                event.tags.splice(event.tags.indexOf("error"), 1);
+                if (event.tags.length === 0) {
                     return bucker.error(event.data);
                 } else {
-                    return bucker.error(tag, event.data);
+                    return bucker.error(event.tags, event.data);
                 }
             } else if (tags.warn) {
-                var tag = event.tags.splice(event.tags.indexOf("warn"));
-                if (tag.length === 0) {
-                    return bucker.error(event.data);
+                event.tags.splice(event.tags.indexOf("warn"), 1);
+                if (event.tags.length === 0) {
+                    return bucker.warn(event.data);
                 } else {
-                    return bucker.info(event.tags, event.data);
+                    return bucker.warn(event.tags, event.data);
                 }
             } else if (tags.debug) {
-                var tag = event.tags.splice(event.tags.indexOf("debug"));
-                if (tag.length === 0) {
-                    return bucker.error(event.data);
+                event.tags.splice(event.tags.indexOf("debug"), 1);
+                if (event.tags.length === 0) {
+                    return bucker.debug(event.data);
                 } else {
-                    return bucker.info(event.tags, event.data);
+                    return bucker.debug(event.tags, event.data);
                 }
             } else if (tags.info) {
-                var tag = event.tags.splice(event.tags.indexOf("info"));
-                if (tag.length === 0) {
-                    return bucker.error(event.data);
+                event.tags.splice(event.tags.indexOf("info"), 1);
+                if (event.tags.length === 0) {
+                    return bucker.info(event.data);
                 } else {
                     return bucker.info(event.tags, event.data);
                 }

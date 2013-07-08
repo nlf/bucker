@@ -245,6 +245,57 @@ Bucker.prototype.errorHandler = function (opts) {
     };
 };
 
+// Hapi plugin
+exports.register = function (server, options, next) {
+    if (typeof server.ext !== 'function') throw new Error("The Bucker Hapi plugin requires the permission 'ext' to be true");
+    // get/make bucker object
+    var bucker;
+    if (options instanceof Bucker) {
+        bucker = options;
+        options = bucker.options;
+    } else {
+        bucker = new Bucker(options);
+    }
+    server.ext('onRequest', bucker.hapi());
+    // add listener by default but dont if its false
+    if (!options.hapi || (options.hapi && options.hapi.handleLog)) {
+        server.events.on('log', function (event, tags) {
+            if (tags.error) {
+                event.tags.splice(event.tags.indexOf("error"), 1);
+                if (event.tags.length === 0) {
+                    return bucker.error(event.data);
+                } else {
+                    return bucker.error(event.tags, event.data);
+                }
+            } else if (tags.warn) {
+                event.tags.splice(event.tags.indexOf("warn"), 1);
+                if (event.tags.length === 0) {
+                    return bucker.warn(event.data);
+                } else {
+                    return bucker.warn(event.tags, event.data);
+                }
+            } else if (tags.debug) {
+                event.tags.splice(event.tags.indexOf("debug"), 1);
+                if (event.tags.length === 0) {
+                    return bucker.debug(event.data);
+                } else {
+                    return bucker.debug(event.tags, event.data);
+                }
+            } else if (tags.info) {
+                event.tags.splice(event.tags.indexOf("info"), 1);
+                if (event.tags.length === 0) {
+                    return bucker.info(event.data);
+                } else {
+                    return bucker.info(event.tags, event.data);
+                }
+            } else {
+                return bucker.log(event.tags, event.data);
+            }
+        });
+    }
+    return next();
+};
+
 exports.createLogger = function (options, mod) {
     return new Bucker(options, mod);
 };

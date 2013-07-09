@@ -6,6 +6,10 @@
   "keywords": [
     "log"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nlf/bucker.git"
+  },
   "author": "Nathan LaFreniere <quitlahok@gmail.com>",
   "license": "MIT",
   "dependencies": {

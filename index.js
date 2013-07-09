@@ -69,10 +69,6 @@ var Bucker = function (opts, mod) {
         self._setHandler(opts.error, 'exception');
     }
 
-    process.on('setLogLevel', function (level) {
-        self.level = typeof level === 'number' ? level : levels[level];
-    });
-
     if (self.handleExceptions) {
         process.on('uncaughtException', function (err) {
             self.exception(err);

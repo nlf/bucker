@@ -29,7 +29,7 @@ var Bucker = function (opts, mod) {
 
     if (typeof opts === 'undefined') opts = {};
 
-    self.handleExceptions = opts.hasOwnProperty('handleExceptions') ? opts.handleExceptions : true;
+    self.handleExceptions = opts.hasOwnProperty('handleExceptions') ? opts.handleExceptions : false;
 
     if (opts.hasOwnProperty('level')) {
         if (typeof opts.level === 'string') {

@@ -242,8 +242,8 @@ Bucker.prototype.errorHandler = function (opts) {
 };
 
 // Hapi plugin
-exports.register = function (server, options, next) {
-    if (typeof server.ext !== 'function') throw new Error("The Bucker Hapi plugin requires the permission 'ext' to be true");
+exports.register = function (plugin, options, next) {
+    if (typeof plugin.ext !== 'function') throw new Error("The Bucker Hapi plugin requires the permission 'ext' to be true");
     // get/make bucker object
     var bucker;
     if (options instanceof Bucker) {
@@ -252,10 +252,10 @@ exports.register = function (server, options, next) {
     } else {
         bucker = new Bucker(options);
     }
-    server.ext('onRequest', bucker.hapi());
+    plugin.ext('onRequest', bucker.hapi());
     // add listener by default but dont if its false
     if (!options.hapi || (options.hapi && options.hapi.handleLog)) {
-        server.events.on('log', function (event, tags) {
+        plugin.events.on('log', function (event, tags) {
             var level;
             var data = '';
             // this is done intentionally so if multiple levels

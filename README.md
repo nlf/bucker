@@ -57,7 +57,7 @@ Options
 * level - minimum level to log, this can be specified as a string (i.e. 'error') or as a number (i.e. 3). items that are below this level will not be logged.
 * name - name to use when namespacing logs. note that this will override the module reference if one is passed.
 * handleExceptions - a boolean to indicate whether or not we should add an uncaughtException handler. the handler will log the event as an exception, then process.exit(1).
-* hapi - when using bucker for logging as a hapi plugin we add a handler to the server's 'log' event and log the data with an appropriate log level based on the tags provided you can prevent this behavior by adding the property 'handleLog', set as false to the hapi object ``` hapi: { handleLog: false } ```
+* hapi - when using bucker for logging as a hapi plugin we add a handler to the server's 'log' event and log the data with an appropriate log level based on the tags provided. You can prevent this behavior by adding the property 'handleLog', set as false to the hapi object ``` hapi: { handleLog: false } ```
 
 The above list describes the most basic usage of each option. Below, I've written out an example config object that shows all available options.
 In addition to the 'app' option, individual configurations may be set for each log level supporting the same options as the 'app' and 'error' items. If no level options are specified, the defaults (those passed to the 'app' and/or 'error' options) will be used.

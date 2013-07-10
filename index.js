@@ -226,13 +226,6 @@ Bucker.prototype.middleware = function () {
     };
 };
 
-Bucker.prototype.hapi = function () {
-    var self = this;
-    return function (request, next) {
-        return self.middleware()(request.raw.req, request.raw.res, next);
-    };
-};
-
 Bucker.prototype.errorHandler = function (opts) {
     var self = this;
     return function (err, req, res, next) {
@@ -243,7 +236,6 @@ Bucker.prototype.errorHandler = function (opts) {
 
 // Hapi plugin
 exports.register = function (plugin, options, next) {
-    if (typeof plugin.ext !== 'function') throw new Error("The Bucker Hapi plugin requires the permission 'ext' to be true");
     // get/make bucker object
     var bucker;
     if (options instanceof Bucker) {
@@ -252,7 +244,22 @@ exports.register = function (plugin, options, next) {
     } else {
         bucker = new Bucker(options);
     }
-    plugin.ext('onRequest', bucker.hapi());
+    // access logger
+    plugin.events.on('response', function (req) {
+        var access = {
+            remote_ip: req.info.remoteAddress,
+            time: new Date(),
+            method: req.method.toUpperCase(),
+            url: req.url.path,
+            http_ver: req.raw.req.httpVersion,
+            referer: req.raw.req.headers.referer || req.raw.req.headers.referrer || '-',
+            agent: req.raw.req.headers['user-agent'],
+            length: req._response._headers['Content-Length'],
+            status: req._response._code,
+            response_time: new Date().getTime() - req.info.received + 'ms'
+        };
+        bucker.access(access);
+    });
     // add listener by default but dont if its false
     if (!options.hapi || (options.hapi && options.hapi.handleLog)) {
         plugin.events.on('log', function (event, tags) {
@@ -270,7 +277,7 @@ exports.register = function (plugin, options, next) {
             });
             if (event.tags.length) data = '[' + event.tags.join(', ') + '] ';
             data += util.format(event.data);
-            return bucker[level](data);
+            bucker[level](data);
         });
     }
     return next();

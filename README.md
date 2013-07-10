@@ -29,17 +29,20 @@ Included in the logger is a middleware for connect/express that writes access lo
 app.use(logger.middleware());
 ```
 
-In addition to the connect middleware, bucker also exports a middleware for Hapi. To use it, extend the onRequest event of your server, for example..
-
-```javascript
-server.ext('onRequest', logger.hapi());
-```
-
 Also included is a generic error handling middleware for connect. It logs the error appropriately as an exception, then continues to the next step in the middleware chain
 
 ```javascript
 app.use(logger.errorHandler());
 ```
+
+In addition to the connect middleware, bucker also exports a Hapi plugin. To use it, simply load it into your plugins
+
+```javascript
+pack.require('bucker', { .. opts .. }, function (err) {
+  if (err) console.error('failed loading bucker plugin');
+});
+```
+
 
 
 Options

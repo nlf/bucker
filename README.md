@@ -28,13 +28,6 @@ Included in the logger is a middleware for connect/express that writes access lo
 ```javascript
 app.use(logger.middleware());
 ```
-
-Also included is a generic error handling middleware for connect. It logs the error appropriately as an exception, then continues to the next step in the middleware chain
-
-```javascript
-app.use(logger.errorHandler());
-```
-
 In addition to the connect middleware, bucker also exports a Hapi plugin. To use it, simply load it into your plugins
 
 ```javascript
@@ -52,11 +45,11 @@ Options
 * error - filename to save error log items to. if this is not specified, errors will be combined with the regular app log if one is available.
 * access - filename to save access log items to.
 * console - boolean specifying if we should print to console or not.
-* syslog - a host:port combination to send logs to via syslog (e.g. 'localhost:6500'). port defaults to 514 if not specified. this may also be specified as an object, as in { host: 'localhost', port: 514 }
+* syslog - a host:port combination to send logs to via syslog (e.g. 'localhost:6500'). port defaults to 514 if not specified. this may also be specified as an object, as in ``` { host: 'localhost', port: 514 } ```
 * level - minimum level to log, this can be specified as a string (i.e. 'error') or as a number (i.e. 3). items that are below this level will not be logged.
 * name - name to use when namespacing logs. note that this will override the module reference if one is passed.
 * handleExceptions - a boolean to indicate whether or not we should add an uncaughtException handler. the handler will log the event as an exception, then process.exit(1).
-
+* hapi - when using bucker for logging as a hapi plugin we add a handler to the server's 'log' event and log the data with an appropriate log level based on the tags provided. You can prevent this behavior by adding the property 'handleLog', set as false to the hapi object ``` hapi: { handleLog: false } ```
 
 The above list describes the most basic usage of each option. Below, I've written out an example config object that shows all available options.
 In addition to the 'app' option, individual configurations may be set for each log level supporting the same options as the 'app' and 'error' items. If no level options are specified, the defaults (those passed to the 'app' and/or 'error' options) will be used.

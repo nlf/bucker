@@ -226,13 +226,6 @@ Bucker.prototype.middleware = function () {
     };
 };
 
-Bucker.prototype.hapi = function () {
-    var self = this;
-    return function (request, next) {
-        return self.middleware()(request.raw.req, request.raw.res, next);
-    };
-};
-
 Bucker.prototype.errorHandler = function (opts) {
     var self = this;
     return function (err, req, res, next) {
@@ -242,8 +235,7 @@ Bucker.prototype.errorHandler = function (opts) {
 };
 
 // Hapi plugin
-exports.register = function (server, options, next) {
-    if (typeof server.ext !== 'function') throw new Error("The Bucker Hapi plugin requires the permission 'ext' to be true");
+exports.register = function (plugin, options, next) {
     // get/make bucker object
     var bucker;
     if (options instanceof Bucker) {
@@ -252,44 +244,42 @@ exports.register = function (server, options, next) {
     } else {
         bucker = new Bucker(options);
     }
-    server.ext('onRequest', bucker.hapi());
+    // access logger
+    plugin.events.on('response', function (req) {
+        var access = {
+            remote_ip: req.info.remoteAddress,
+            time: new Date(),
+            method: req.method.toUpperCase(),
+            url: req.url.path,
+            http_ver: req.raw.req.httpVersion,
+            referer: req.raw.req.headers.referer || req.raw.req.headers.referrer || '-',
+            agent: req.raw.req.headers['user-agent'],
+            length: req._response._headers['Content-Length'],
+            status: req._response._code,
+            response_time: new Date().getTime() - req.info.received + 'ms'
+        };
+        bucker.access(access);
+    });
     // add listener by default but dont if its false
     if (!options.hapi || (options.hapi && options.hapi.handleLog)) {
-        server.events.on('log', function (event, tags) {
-            if (tags.error) {
-                event.tags.splice(event.tags.indexOf("error"), 1);
-                if (event.tags.length === 0) {
-                    return bucker.error(event.data);
-                } else {
-                    return bucker.error(event.tags, event.data);
-                }
-            } else if (tags.warn) {
-                event.tags.splice(event.tags.indexOf("warn"), 1);
-                if (event.tags.length === 0) {
-                    return bucker.warn(event.data);
-                } else {
-                    return bucker.warn(event.tags, event.data);
-                }
-            } else if (tags.debug) {
-                event.tags.splice(event.tags.indexOf("debug"), 1);
-                if (event.tags.length === 0) {
-                    return bucker.debug(event.data);
-                } else {
-                    return bucker.debug(event.tags, event.data);
-                }
-            } else if (tags.info) {
-                event.tags.splice(event.tags.indexOf("info"), 1);
-                if (event.tags.length === 0) {
-                    return bucker.info(event.data);
-                } else {
-                    return bucker.info(event.tags, event.data);
-                }
-            } else {
-                return bucker.log(event.tags, event.data);
-            }
+        plugin.events.on('log', function (event, tags) {
+            var level;
+            var data = '';
+            // this is done intentionally so if multiple levels
+            // are declared, the one with highest priority will be used
+            if (tags.debug) level = 'debug';
+            if (tags.info) level = 'info';
+            if (tags.warn) level = 'warn';
+            if (tags.error) level = 'error';
+            if (!level) level = 'info';
+            event.tags = event.tags.filter(function (tag) {
+                return !~['error', 'warn', 'info', 'debug'].indexOf(tag);
+            });
+            if (event.tags.length) data = '[' + event.tags.join(', ') + '] ';
+            data += util.format(event.data);
+            bucker[level](data);
         });
     }
-    server.app.bucker = bucker;
     return next();
 };
 

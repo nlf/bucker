@@ -28,22 +28,14 @@ Included in the logger is a middleware for connect/express that writes access lo
 ```javascript
 app.use(logger.middleware());
 ```
-
-In addition to the connect middleware, bucker also exports a middleware for Hapi. To use it, require bucker as a plugin, for example..
-
-```javascript
-var Hapi = require('hapi');
-var pack = new Hapi.Pack();
-
-pack.server('localhost', 8000, { labels: ['our server'] });
-pack.allow({ ext: true }).require('bucker', options, function () {});
-```
-
-Also included is a generic error handling middleware for connect. It logs the error appropriately as an exception, then continues to the next step in the middleware chain
+In addition to the connect middleware, bucker also exports a Hapi plugin. To use it, simply load it into your plugins
 
 ```javascript
-app.use(logger.errorHandler());
+pack.require('bucker', { .. opts .. }, function (err) {
+  if (err) console.error('failed loading bucker plugin');
+});
 ```
+
 
 
 Options
@@ -53,7 +45,7 @@ Options
 * error - filename to save error log items to. if this is not specified, errors will be combined with the regular app log if one is available.
 * access - filename to save access log items to.
 * console - boolean specifying if we should print to console or not.
-* syslog - a host:port combination to send logs to via syslog (e.g. 'localhost:6500'). port defaults to 514 if not specified. this may also be specified as an object, as in { host: 'localhost', port: 514 }
+* syslog - a host:port combination to send logs to via syslog (e.g. 'localhost:6500'). port defaults to 514 if not specified. this may also be specified as an object, as in ``` { host: 'localhost', port: 514 } ```
 * level - minimum level to log, this can be specified as a string (i.e. 'error') or as a number (i.e. 3). items that are below this level will not be logged.
 * name - name to use when namespacing logs. note that this will override the module reference if one is passed.
 * handleExceptions - a boolean to indicate whether or not we should add an uncaughtException handler. the handler will log the event as an exception, then process.exit(1).

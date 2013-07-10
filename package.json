@@ -4,7 +4,10 @@
   "description": "super easy logging module",
   "main": "index.js",
   "keywords": [
-    "log"
+    "log",
+    "hapi",
+    "express",
+    "connect"
   ],
   "repository": {
     "type": "git",

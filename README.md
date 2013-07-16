@@ -15,6 +15,7 @@ logger.debug('debug message');
 logger.warn('warning');
 logger.error('error');
 logger.log('also works for informational messsages');
+logger.module('something_else').info('and you can override the module name temporarily if you want');
 ```
 
 Where opts is an optional object containing your configuration options, and the module reference is optionally used for namespacing your logs and can be omitted.

@@ -157,8 +157,20 @@ Bucker.prototype._runHandlers = function (level, data) {
     if (levels[level].num < self.level) return;
     types.forEach(function (type) {
         handler = self._findHandler(level, type);
-        if (handler) handler.log(moment(), level, data);
+        if (handler) handler.log(moment(), level, self.name, data);
     });
+};
+
+Bucker.prototype.module = function (mod) {
+    var self = this,
+        newBucker = {};
+
+    for (var key in self) {
+        newBucker[key] = self[key];
+    }
+    newBucker.name = mod;
+
+    return newBucker;
 };
 
 Bucker.prototype.exception = function (err) {
@@ -167,7 +179,7 @@ Bucker.prototype.exception = function (err) {
 
     types.forEach(function (type) {
         handler = self._findHandler('exception', type);
-        if (handler) handler.exception(moment(), err);
+        if (handler) handler.exception(moment(), self.name, err);
     });
 };
 
@@ -194,7 +206,7 @@ Bucker.prototype.access = function (data) {
     data.time = moment(data.time);
     types.forEach(function (type) {
         handler = self._findHandler('access', type);
-        if (handler) handler.access(data);
+        if (handler) handler.access(self.name, data);
     });
 };
 

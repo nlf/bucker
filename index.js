@@ -45,19 +45,19 @@ var Bucker = function (opts, mod) {
     if (opts.hasOwnProperty('app')) {
         self._setDefaultHandler(opts.app, 'file');
     } else {
-        self._setDefaultHandler(false, 'file');
+        self._setDefaultHandler({ file: false }, 'file');
     }
 
     if (opts.hasOwnProperty('console')) {
         self._setDefaultHandler(opts.console, 'console');
     } else {
-        self._setDefaultHandler(true, 'console');
+        self._setDefaultHandler({ console: true }, 'console');
     }
 
     if (opts.hasOwnProperty('syslog')) {
         self._setDefaultHandler(opts.syslog, 'syslog');
     } else {
-        self._setDefaultHandler(false, 'syslog');
+        self._setDefaultHandler({ syslog: false }, 'syslog');
     }
 
     if (opts.hasOwnProperty('access')) self._setHandler(opts.access, 'access');
@@ -79,29 +79,12 @@ var Bucker = function (opts, mod) {
 
 Bucker.prototype._setDefaultHandler = function (options, type) {
     var self = this,
-        handler,
-        hash,
-        loglevels = levels.reverse.concat(['access']);
+        loglevels = levels.reverse.concat(['access']),
+        opts = {};
 
-    if (options === false) {
-        handler = false;
-    } else {
-        if (type === 'file') {
-            hash = typeof options === 'string' ? options : JSON.stringify(options);
-            self.files[hash] = self.loggers.push(File(options, options.name || self.name)) - 1;
-            handler = self.files[hash];
-        } else if (type === 'console') {
-            hash = typeof options === 'boolean' ? options.toString() : JSON.stringify(options);
-            self.console[hash] = self.loggers.push(Console(options, options.name || self.name)) - 1;
-            handler = self.console[hash];
-        } else if (type === 'syslog') {
-            hash = typeof options === 'string' ? options : JSON.stringify(options);
-            self.syslog[hash] = self.loggers.push(Syslog(options, options.name || self.name)) - 1;
-            handler = self.syslog[hash];
-        }
-    }
+    opts[type] = typeof options === 'object' ? options[type] : options;
     loglevels.forEach(function (level) {
-        self.handlers[level][type] = handler;
+        self._setHandler(opts, level);
     });
 };
 

@@ -82,7 +82,7 @@ Bucker.prototype._setDefaultHandler = function (options, type) {
         loglevels = levels.reverse.concat(['access']),
         opts = {};
 
-    opts[type] = typeof options === 'object' ? options[type] : options;
+    opts[type] = options.hasOwnProperty(type) ? options[type] : options;
     loglevels.forEach(function (level) {
         self._setHandler(opts, level);
     });

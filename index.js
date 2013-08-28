@@ -5,8 +5,9 @@ var moment = require('moment');
 var Console = require('./lib/console');
 var File = require('./lib/file');
 var Syslog = require('./lib/syslog');
+var Logstash = require('./lib/logstash');
 
-var types = ['console', 'file', 'syslog'];
+var types = ['console', 'file', 'syslog', 'logstash'];
 var levels = {
     debug: { num: 0, color: 'blue' },
     info: { num: 1, color: 'green' },
@@ -23,10 +24,12 @@ var Bucker = function (opts, mod) {
     self.options = {};
     self.files = {};
     self.syslog = {};
+    self.logstash = {};
     self.console = {};
     self.handlers = { access: {}, debug: {}, info: {}, warn: {}, error: {}, exception: {} };
     self.loggers = [];
     self.name = '';
+    self._tags = [];
 
     if (typeof opts === 'undefined') opts = {};
 
@@ -59,6 +62,12 @@ var Bucker = function (opts, mod) {
         self._setDefaultHandler(opts.syslog, 'syslog');
     } else {
         self._setDefaultHandler({ syslog: false }, 'syslog');
+    }
+
+    if (opts.hasOwnProperty('logstash')) {
+        self._setDefaultHandler(opts.logstash, 'logstash');
+    } else {
+        self._setDefaultHandler({ logstash: false }, 'logstash');
     }
 
     if (opts.hasOwnProperty('access')) self._setHandler(opts.access, 'access');
@@ -127,6 +136,15 @@ Bucker.prototype._setHandler = function (options, level) {
                 self.handlers[level].syslog = self.syslog[hash];
             }
         }
+        if (options.hasOwnProperty('logstash')) {
+            if (options.logstash === false) {
+                self.handlers[level].logstash = false;
+            } else {
+                hash = typeof options.logstash === 'string' ? options.logstash : JSON.stringify(options.logstash);
+                if (!self.logstash.hasOwnProperty(hash)) self.logstash[hash] = self.loggers.push(Logstash(options.logstash, options.logstash.name || self.name)) - 1;
+                self.handlers[level].logstash = self.logstash[hash];
+            }
+        }
     }
 };
 
@@ -141,18 +159,30 @@ Bucker.prototype._runHandlers = function (level, data) {
     if (levels[level].num < self.level) return;
     types.forEach(function (type) {
         handler = self._findHandler(level, type);
-        if (handler) handler.log(moment(), level, self.name, data);
+        if (handler) handler.log(moment(), level, self.name, data, self._tags);
     });
 };
 
+function _clone(source, target) {
+    for (var key in source) {
+        target[key] = source[key];
+    }
+}
+
 Bucker.prototype.module = function (mod) {
-    var self = this;
     var newBucker = {};
 
-    for (var key in self) {
-        newBucker[key] = self[key];
-    }
+    _clone(this, newBucker);
     newBucker.name = mod;
+
+    return newBucker;
+};
+
+Bucker.prototype.tags = function (tags) {
+    var newBucker = {};
+
+    _clone(this, newBucker);
+    newBucker._tags = tags;
 
     return newBucker;
 };
@@ -163,7 +193,7 @@ Bucker.prototype.exception = function (err) {
 
     types.forEach(function (type) {
         handler = self._findHandler('exception', type);
-        if (handler) handler.exception(moment(), self.name, err);
+        if (handler) handler.exception(moment(), self.name, err, self._tags);
     });
 };
 
@@ -179,6 +209,10 @@ Bucker.prototype.warn = function () {
     this._runHandlers('warn', util.format.apply(this, arguments));
 };
 
+Bucker.prototype.warning = function () {
+    this._runHandlers('warn', util.format.apply(this, arguments));
+};
+
 Bucker.prototype.error = function () {
     this._runHandlers('error', util.format.apply(this, arguments));
 };
@@ -190,7 +224,7 @@ Bucker.prototype.access = function (data) {
     data.time = moment(data.time);
     types.forEach(function (type) {
         handler = self._findHandler('access', type);
-        if (handler) handler.access(self.name, data);
+        if (handler) handler.access(self.name, data, self._tags);
     });
 };
 
@@ -275,9 +309,8 @@ exports.register = function (plugin, options, next) {
             event.tags = event.tags.filter(function (tag) {
                 return !~['error', 'warn', 'info', 'debug'].indexOf(tag);
             });
-            if (event.tags.length) data = '[' + event.tags.join(', ') + '] ';
             data += util.format(event.data);
-            bucker[level](data);
+            bucker.tags(event.tags)[level](data);
         });
     }
     return next();

@@ -17,6 +17,7 @@ app.get('*', function (req, res, next) {
     logger.info('and we can add metadata', { useful: true, verbose: 'definitely' });
     logger.module('testing').info('and override the module name');
     logger.info('without breaking the main instance');
+    logger.tags(['and', 'tags']).info('are supported');
 });
 
 app.listen(8000);

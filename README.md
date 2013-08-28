@@ -16,6 +16,7 @@ logger.warn('warning');
 logger.error('error');
 logger.log('also works for informational messsages');
 logger.module('something_else').info('and you can override the module name temporarily if you want');
+logger.tags(['showing', 'off']).info('and we also support tags now');
 ```
 
 Where opts is an optional object containing your configuration options, and the module reference is optionally used for namespacing your logs and can be omitted.
@@ -47,6 +48,7 @@ Options
 * access - filename to save access log items to.
 * console - boolean specifying if we should print to console or not.
 * syslog - a host:port combination to send logs to via syslog (e.g. 'localhost:6500'). port defaults to 514 if not specified. this may also be specified as an object, as in ``` { host: 'localhost', port: 514 } ```
+* logstash - an object describing the host to ship logstash formatted events to, this is documented further below
 * level - minimum level to log, this can be specified as a string (i.e. 'error') or as a number (i.e. 3). items that are below this level will not be logged.
 * name - name to use when namespacing logs. note that this will override the module reference if one is passed.
 * handleExceptions - a boolean to indicate whether or not we should add an uncaughtException handler. the handler will log the event as an exception, then process.exit(1).
@@ -69,10 +71,19 @@ In addition to the 'app' option, individual configurations may be set for each l
     host: 'localhost',
     port: 514,
     facility: 18
+  },
+  logstash: {
+    redis: true, // send as redis pubsub messages
+    // udp: true, // or send directly over UDP, *NOTE* you can only use one or the other, never both
+    host: '127.0.0.1', // defaults to localhost
+    port: 12345, // defaults to 6379 for redis, 9999 for udp
+    key: 'bucker_logs' // defaults to 'bucker', this is only used for the redis transport
   }
 }
 ```
 
 Note that the format and timestamp options are not available to the syslog facility, though they are available to file and console. the accessFormat option is available for every transport. Timestamp may be set to false to prevent timestamps from being printed. Obviously, the filename option is exclusive to the file transport. Additionally, the color option is exclusive to the console transport and the facility, host, and port options to the syslog transport.
+
+None of the format options are available to the logstash transport, since it sends logs using logstash's internal format.
 
 If you have questions, feature requests, or comments, please create an issue and I'll respond to them as soon as I'm able.

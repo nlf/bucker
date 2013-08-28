@@ -1,11 +1,13 @@
-var path = require('path'),
-    util = require('util'),
-    moment = require('moment'),
-    Console = require('./lib/console'),
-    File = require('./lib/file'),
-    Syslog = require('./lib/syslog'),
-    types = ['console', 'file', 'syslog'],
-    levels = {
+var path = require('path');
+var util = require('util');
+var moment = require('moment');
+
+var Console = require('./lib/console');
+var File = require('./lib/file');
+var Syslog = require('./lib/syslog');
+
+var types = ['console', 'file', 'syslog'];
+var levels = {
     debug: { num: 0, color: 'blue' },
     info: { num: 1, color: 'green' },
     warn: { num: 2, color: 'yellow' },
@@ -15,9 +17,8 @@ var path = require('path'),
 };
 
 var Bucker = function (opts, mod) {
-    var self = this,
-        file,
-        host;
+    var self = this;
+    var file, host;
 
     self.options = {};
     self.files = {};
@@ -78,9 +79,9 @@ var Bucker = function (opts, mod) {
 };
 
 Bucker.prototype._setDefaultHandler = function (options, type) {
-    var self = this,
-        loglevels = levels.reverse.concat(['access']),
-        opts = {};
+    var self = this;
+    var loglevels = levels.reverse.concat(['access']);
+    var opts = {};
 
     opts[type] = options.hasOwnProperty(type) ? options[type] : options;
     loglevels.forEach(function (level) {
@@ -89,8 +90,8 @@ Bucker.prototype._setDefaultHandler = function (options, type) {
 };
 
 Bucker.prototype._setHandler = function (options, level) {
-    var self = this,
-        hash;
+    var self = this;
+    var hash;
 
     if (options === false) self.handlers[level] = false;
 
@@ -134,8 +135,8 @@ Bucker.prototype._findHandler = function (level, type) {
 };
 
 Bucker.prototype._runHandlers = function (level, data) {
-    var self = this,
-        handler;
+    var self = this;
+    var handler;
 
     if (levels[level].num < self.level) return;
     types.forEach(function (type) {
@@ -145,8 +146,8 @@ Bucker.prototype._runHandlers = function (level, data) {
 };
 
 Bucker.prototype.module = function (mod) {
-    var self = this,
-        newBucker = {};
+    var self = this;
+    var newBucker = {};
 
     for (var key in self) {
         newBucker[key] = self[key];
@@ -157,8 +158,8 @@ Bucker.prototype.module = function (mod) {
 };
 
 Bucker.prototype.exception = function (err) {
-    var self = this,
-        handler;
+    var self = this;
+    var handler;
 
     types.forEach(function (type) {
         handler = self._findHandler('exception', type);
@@ -183,8 +184,8 @@ Bucker.prototype.error = function () {
 };
 
 Bucker.prototype.access = function (data) {
-    var self = this,
-        handler;
+    var self = this;
+    var handler;
 
     data.time = moment(data.time);
     types.forEach(function (type) {
@@ -195,7 +196,9 @@ Bucker.prototype.access = function (data) {
 
 Bucker.prototype.middleware = function () {
     var self = this;
+
     return function (req, res, next) {
+        var end = res.end;
         var access = {
             remote_ip: req.ip || req.socket.remoteAddress || req.socket.socket.remoteAddress,
             time: new Date(),
@@ -208,7 +211,7 @@ Bucker.prototype.middleware = function () {
             status: 0,
             response_time: Date.now()
         };
-        var end = res.end;
+
         res.end = function (chunk, encoding) {
             access.response_time = String(Date.now() - access.response_time) + "ms";
             res.end = end;
@@ -223,6 +226,7 @@ Bucker.prototype.middleware = function () {
 
 Bucker.prototype.errorHandler = function (opts) {
     var self = this;
+
     return function (err, req, res, next) {
         self.exception(err);
         return next(err);
@@ -233,6 +237,7 @@ Bucker.prototype.errorHandler = function (opts) {
 exports.register = function (plugin, options, next) {
     // get/make bucker object
     var bucker;
+
     if (options instanceof Bucker) {
         bucker = options;
         options = bucker.options;

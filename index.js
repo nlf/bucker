@@ -1,6 +1,7 @@
 var path = require('path');
 var util = require('util');
 var moment = require('moment');
+var nodemailer = require("nodemailer");
 
 var Console = require('./lib/console');
 var File = require('./lib/file');
@@ -30,8 +31,10 @@ var Bucker = function (opts, mod) {
     self.loggers = [];
     self.name = '';
     self._tags = [];
+    self._lastLog = {};
 
     if (typeof opts === 'undefined') opts = {};
+    else self.options = opts;
 
     self.handleExceptions = opts.hasOwnProperty('handleExceptions') ? opts.handleExceptions : false;
 
@@ -155,12 +158,17 @@ Bucker.prototype._findHandler = function (level, type) {
 Bucker.prototype._runHandlers = function (level, data) {
     var self = this;
     var handler;
+    self._setLastLog(moment(), level, self.name, data, self._tags);
 
     if (levels[level].num < self.level) return;
     types.forEach(function (type) {
         handler = self._findHandler(level, type);
         if (handler) handler.log(moment(), level, self.name, data, self._tags);
     });
+};
+
+Bucker.prototype._setLastLog = function (time, level, name, data, _tags) {
+    this._lastLog = {time: time.format('YYYY-MM-DD HH:mm'), level: level, name: name, data: data, _tags: _tags};
 };
 
 function _clone(source, target) {
@@ -199,22 +207,27 @@ Bucker.prototype.exception = function (err) {
 
 Bucker.prototype.debug = function () {
     this._runHandlers('debug', util.format.apply(this, arguments));
+    return this;
 };
 
 Bucker.prototype.log = Bucker.prototype.info = function () {
     this._runHandlers('info', util.format.apply(this, arguments));
+    return this;
 };
 
 Bucker.prototype.warn = function () {
     this._runHandlers('warn', util.format.apply(this, arguments));
+    return this;
 };
 
 Bucker.prototype.warning = function () {
     this._runHandlers('warn', util.format.apply(this, arguments));
+    return this;
 };
 
 Bucker.prototype.error = function () {
     this._runHandlers('error', util.format.apply(this, arguments));
+    return this;
 };
 
 Bucker.prototype.access = function (data) {
@@ -265,6 +278,52 @@ Bucker.prototype.errorHandler = function (opts) {
         self.exception(err);
         return next(err);
     };
+};
+
+Bucker.prototype.email = function () {
+    var self = this;
+
+    if (!self.options.hasOwnProperty('email')) {
+        self.error('no email configuration specified');
+        return 'no email service!';
+    }
+
+    // check time difference between last send email
+    if (self._lastEmail && moment().diff(moment(self._lastEmail), 'minutes') < 5)
+        return; // ignoring it to protect the email recipient!
+
+    // create transport method (opens pool of SMTP connections)
+    var transport = nodemailer.createTransport('SMTP', {
+        host: self.options.email.smtp,
+        secureConnection: true,
+        port: 465,
+        auth: {
+            user: self.options.email.username,
+            pass: self.options.email.password
+        }
+    });
+
+    var mailOptions = {
+        from: self.options.email.adress,
+        to: self.options.email.address,
+        subject: '[BUCKER-LOG] ' + self._lastLog.level + ': ' + self._lastLog.time,
+        text: '[BUCKER-LOG] ' + self._lastLog.time + ' ' + self._lastLog.level + ': ' + self._lastLog.data + (self._lastLog._tags.length > 0 ? '\n\tTags: ' + self._lastLog._tags.join(', ') : '')
+    };
+
+    // send mail with defined transport object
+    transport.sendMail(mailOptions, function (error, response) {
+        if (error) {
+            self.error(error);
+        } else {
+            self.log('Message sent:' + response.message);
+        }
+
+        // shut down the connection pool, no more messages
+        transport.close();
+    });
+    
+    self._lastEmail = moment();
+    return self;
 };
 
 // Hapi plugin

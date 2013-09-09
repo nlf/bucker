@@ -78,6 +78,8 @@ In addition to the 'app' option, individual configurations may be set for each l
     host: '127.0.0.1', // defaults to localhost
     port: 12345, // defaults to 6379 for redis, 9999 for udp
     key: 'bucker_logs', // defaults to 'bucker', this is only used for the redis transport
+    channel: true, // use redis pubsub
+    list: false, // use a redis list *NOTE* if channel is false, list usage is forced
     source_host: 'bacon.com' // this sets the @source_host field in logstash
   }
 }

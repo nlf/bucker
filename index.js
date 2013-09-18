@@ -371,7 +371,13 @@ exports.register = function (plugin, options, next) {
             data += util.format(event.data);
             bucker.tags(event.tags)[level](data);
         });
+
+        plugin.events.on('internalError', function (event, error) {
+            bucker.exception({ message: error.message, stack: error.trace });
+        });
     }
+    // and attach ourselves to server.plugins.bucker
+    plugin.api(bucker);
     return next();
 };
 

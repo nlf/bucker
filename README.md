@@ -39,6 +39,11 @@ pack.require('bucker', { .. opts .. }, function (err) {
 ```
 
 
+Frontend Usage
+==============
+
+Thanks to Johannes Boyne, there exists a module to relay frontend logs to a receiver on your server for storage and display. You can read more about it [here](https://github.com/johannesboyne/bucker-receiver)
+
 
 Options
 =======

@@ -40,7 +40,7 @@ var Bucker = function (opts, mod) {
 
     if (opts.hasOwnProperty('level')) {
         if (typeof opts.level === 'string') {
-            if (levels.hasOwnProperty(opts.level)) self.level = levels[opts.level];
+            if (levels.hasOwnProperty(opts.level)) self.level = levels[opts.level].num;
         } else if (typeof opts.level === 'number') {
             if (opts.level <= 3 && opts.level >= 0) self.level = opts.level;
         }

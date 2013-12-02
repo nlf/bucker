@@ -38,6 +38,33 @@ pack.require('bucker', { .. opts .. }, function (err) {
 });
 ```
 
+NullLogger
+----------
+
+Bucker also provides `createNullLogger()` which returns a null logger that does, well, nothing. A null logger allows you to implement a default logger in an object that does nothing, allowing a real logger to be passed into your object at runtime. e.g:
+
+
+```javascript
+var bucker = require('bucker');
+function SomeApi (options) {
+    options = options || {};
+    this.logger = options.logger || bucker.createNullLogger();
+};
+
+SomeApi.prototype.someMethod = function () {
+    this.logger.info('[someMethod] was called');
+}
+
+var apiUnlogged = new SomeApi();
+apiUnlogged.someMethod(); //=> Nothing logged, but doesn't blow up either
+
+var logger = bucker.createLogger({ console: true }, 'MyApp');
+var apiLogged = new SomeApi({ logger: appLogger.module('Api') });
+apiLogged.someMethod(); //=> logs '[someMethod was called]' with the logger
+```
+
+The null logger implements all the methods of a bucker logger's public API, so it's methods can be called, chained, etc as normal with no ill-effect.
+
 
 Frontend Usage
 ==============

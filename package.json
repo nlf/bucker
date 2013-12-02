@@ -24,5 +24,8 @@
   "devDependencies": {
     "precommit-hook": "",
     "express": ""
+  },
+  "scripts": {
+    "test": "node test.js"
   }
 }

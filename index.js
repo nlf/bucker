@@ -384,3 +384,15 @@ exports.register = function (plugin, options, next) {
 exports.createLogger = function (options, mod) {
     return new Bucker(options, mod);
 };
+
+exports.createNullLogger = function (options, mod) {
+    var nullLogger = {};
+    var chainingNoop = function () { return nullLogger; };
+
+    Object.keys(Bucker.prototype).forEach(function (method) {
+        if (method[0] === '_') return;
+
+        nullLogger[method] = chainingNoop;
+    });
+    return nullLogger;
+};

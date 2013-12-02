@@ -7,15 +7,17 @@ var Console = require('./lib/console');
 var File = require('./lib/file');
 var Syslog = require('./lib/syslog');
 var Logstash = require('./lib/logstash');
+var UDP = require('./lib/udp');
 
-var types = ['console', 'file', 'syslog', 'logstash'];
+var types = ['console', 'file', 'syslog', 'logstash', 'udp'];
 var levels = {
     debug: { num: 0, color: 'blue' },
     info: { num: 1, color: 'green' },
     warn: { num: 2, color: 'yellow' },
     error: { num: 3, color: 'red' },
     exception: { num: 4, color: 'red' },
-    reverse: ['debug', 'info', 'warn', 'error', 'exception']
+    stat: { num: 5, color: 'blue' },
+    reverse: ['debug', 'info', 'warn', 'error', 'exception', 'stat']
 };
 
 var Bucker = function (opts, mod) {
@@ -26,8 +28,9 @@ var Bucker = function (opts, mod) {
     self.files = {};
     self.syslog = {};
     self.logstash = {};
+    self.udp = {};
     self.console = {};
-    self.handlers = { access: {}, debug: {}, info: {}, warn: {}, error: {}, exception: {} };
+    self.handlers = { access: {}, debug: {}, info: {}, warn: {}, error: {}, exception: {}, stat: {} };
     self.loggers = [];
     self.name = '';
     self._tags = [];
@@ -73,10 +76,17 @@ var Bucker = function (opts, mod) {
         self._setDefaultHandler({ logstash: false }, 'logstash');
     }
 
+    if (opts.hasOwnProperty('udp')) {
+        self._setDefaultHandler(opts.udp, 'udp');
+    } else {
+        self._setDefaultHandler({ udp: false }, 'udp');
+    }
+
     if (opts.hasOwnProperty('access')) self._setHandler(opts.access, 'access');
     if (opts.hasOwnProperty('debug')) self._setHandler(opts.debug, 'debug');
     if (opts.hasOwnProperty('info')) self._setHandler(opts.info, 'info');
     if (opts.hasOwnProperty('warn')) self._setHandler(opts.warn, 'warn');
+    if (opts.hasOwnProperty('stat')) self._setHandler(opts.stat, 'stat');
     if (opts.hasOwnProperty('error')) {
         self._setHandler(opts.error, 'error');
         self._setHandler(opts.error, 'exception');
@@ -146,6 +156,15 @@ Bucker.prototype._setHandler = function (options, level) {
                 hash = typeof options.logstash === 'string' ? options.logstash : JSON.stringify(options.logstash);
                 if (!self.logstash.hasOwnProperty(hash)) self.logstash[hash] = self.loggers.push(Logstash(options.logstash, options.logstash.name || self.name)) - 1;
                 self.handlers[level].logstash = self.logstash[hash];
+            }
+        }
+        if (options.hasOwnProperty('udp')) {
+            if (options.udp === false) {
+                self.handlers[level].udp = false;
+            } else {
+                hash = typeof options.udp === 'string' ? options.udp : JSON.stringify(options.udp);
+                if (!self.udp.hasOwnProperty(hash)) self.udp[hash] = self.loggers.push(UDP(options.udp, options.udp.name || self.name)) - 1;
+                self.handlers[level].udp = self.udp[hash];
             }
         }
     }
@@ -228,6 +247,17 @@ Bucker.prototype.warning = function () {
 Bucker.prototype.error = function () {
     this._runHandlers('error', util.format.apply(this, arguments));
     return this;
+};
+
+Bucker.prototype.stat = function (name, type, value) {
+    type = type || 'counter';
+    var self = this;
+    var handler;
+
+    types.forEach(function (type) {
+        handler = self._findHandler('stat', type);
+        if (handler) handler.stat(moment(), self.name, name, type, value, self._tags);
+    });
 };
 
 Bucker.prototype.access = function (data) {

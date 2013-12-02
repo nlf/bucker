@@ -1,6 +1,7 @@
 var express = require('express'),
     app = express(),
-    logger = require('./index').createLogger({ access: 'access.log', error: 'error.log', app: { file: 'app.log' }, console: true }, module);
+    logger = require('./index').createLogger({ udp: { host: '127.0.0.1', port: 3000, default: { host: 'localhost', other: 'randomdata' } } });
+    // logger = require('./index').createLogger({ access: 'access.log', error: 'error.log', app: { file: 'app.log' }, console: true }, module);
 
 app.use(logger.middleware());
 app.use(app.router);

@@ -368,25 +368,27 @@ exports.register = function (plugin, options, next) {
         bucker = new Bucker(options);
     }
     // access logger
-    plugin.events.on('response', function (req) {
-        var access = {
-            remote_ip: req.info.remoteAddress,
-            time: new Date(),
-            method: req.method.toUpperCase(),
-            url: req.url.path,
-            http_ver: req.raw.req.httpVersion,
-            referer: req.raw.req.headers.referer || req.raw.req.headers.referrer || '-',
-            agent: req.raw.req.headers['user-agent'],
-            length: req._response._headers['Content-Length'],
-            status: req._response._code,
-            response_time: new Date().getTime() - req.info.received + 'ms'
-        };
-        bucker.access(access);
+    plugin.events.on('request', function (request, event, tags) {
+        if (tags.hapi && tags.response) {
+            var access = {
+                remote_ip: request.info.remoteAddress,
+                time: new Date(event.timestamp),
+                method: request.method.toUpperCase(),
+                url: request.path,
+                agent: request.headers['user-agent'],
+                referer: request.headers.referer || request.headers.referrer || '-',
+                http_ver: request.raw.req.httpVersion,
+                length: request.response.headers['content-length'],
+                status: request.response.statusCode,
+                response_time: new Date().getTime() - request.info.received + 'ms'
+            };
+            bucker.access(access);
+        }
     });
     // add listener by default but dont if its false
     if (!options.hapi || (options.hapi && options.hapi.handleLog)) {
-        plugin.events.on('log', function (event, tags) {
-            var level;
+        plugin.events.on('log', function (event, tags, timestamp) {
+            var level = 'info'; //Default
             var data = '';
             // this is done intentionally so if multiple levels
             // are declared, the one with highest priority will be used
@@ -394,11 +396,10 @@ exports.register = function (plugin, options, next) {
             if (tags.info) level = 'info';
             if (tags.warn) level = 'warn';
             if (tags.error) level = 'error';
-            if (!level) level = 'info';
             event.tags = event.tags.filter(function (tag) {
                 return !~['error', 'warn', 'info', 'debug'].indexOf(tag);
             });
-            data += util.format(event.data);
+            data = util.format(event.data);
             bucker.tags(event.tags)[level](data);
         });
 
@@ -407,7 +408,7 @@ exports.register = function (plugin, options, next) {
         });
     }
     // and attach ourselves to server.plugins.bucker
-    plugin.api(bucker);
+    plugin.expose(bucker);
     return next();
 };
 

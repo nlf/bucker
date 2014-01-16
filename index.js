@@ -351,7 +351,7 @@ Bucker.prototype.email = function () {
         // shut down the connection pool, no more messages
         transport.close();
     });
-    
+
     self._lastEmail = moment();
     return self;
 };
@@ -361,14 +361,33 @@ exports.register = function (plugin, options, next) {
     // get/make bucker object
     var bucker;
 
+    var hapiLog = function (event, tags) {
+        var data;
+        var level = 'info'; //Default
+        // this is done intentionally so if multiple levels
+        // are declared, the one with highest priority will be used
+        if (tags.debug) level = 'debug';
+        if (tags.info) level = 'info';
+        if (tags.warn) level = 'warn';
+        if (tags.error) level = 'error';
+        event.tags = event.tags.filter(function (tag) {
+            return !~['error', 'warn', 'info', 'debug'].indexOf(tag);
+        });
+        data = util.format(event.data);
+        bucker.tags(event.tags)[level](data);
+    };
+
     if (options instanceof Bucker) {
         bucker = options;
         options = bucker.options;
     } else {
         bucker = new Bucker(options);
     }
+
     // access logger
     plugin.events.on('request', function (request, event, tags) {
+        var level;
+        //First check for hapi response events
         if (tags.hapi && tags.response) {
             var access = {
                 remote_ip: request.info.remoteAddress,
@@ -382,25 +401,17 @@ exports.register = function (plugin, options, next) {
                 status: request.response.statusCode,
                 response_time: new Date().getTime() - request.info.received + 'ms'
             };
-            bucker.access(access);
+            return bucker.access(access);
+        }
+        //If we have an explicitly defined tag that is a loglevel, log it.
+        if (tags.debug || tags.info || tags.warn || tags.error) {
+            hapiLog(event, tags);
         }
     });
     // add listener by default but dont if its false
     if (!options.hapi || (options.hapi && options.hapi.handleLog)) {
         plugin.events.on('log', function (event, tags, timestamp) {
-            var level = 'info'; //Default
-            var data = '';
-            // this is done intentionally so if multiple levels
-            // are declared, the one with highest priority will be used
-            if (tags.debug) level = 'debug';
-            if (tags.info) level = 'info';
-            if (tags.warn) level = 'warn';
-            if (tags.error) level = 'error';
-            event.tags = event.tags.filter(function (tag) {
-                return !~['error', 'warn', 'info', 'debug'].indexOf(tag);
-            });
-            data = util.format(event.data);
-            bucker.tags(event.tags)[level](data);
+            hapiLog(event, tags);
         });
 
         plugin.events.on('internalError', function (event, error) {

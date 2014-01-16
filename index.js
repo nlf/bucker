@@ -404,7 +404,7 @@ exports.register = function (plugin, options, next) {
             return bucker.access(access);
         }
         //If we have an explicitly defined tag that is a loglevel, log it.
-        if (tags.debug || tags.info || tags.warn || tags.error) {
+        if ((!options.hapi || (options.hapi && options.hapi.handleLog)) && (tags.debug || tags.info || tags.warn || tags.error)) {
             hapiLog(event, tags);
         }
     });

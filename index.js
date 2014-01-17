@@ -393,7 +393,7 @@ exports.register = function (plugin, options, next) {
                 remote_ip: request.info.remoteAddress,
                 time: new Date(event.timestamp),
                 method: request.method.toUpperCase(),
-                url: request.path,
+                url: request.url,
                 agent: request.headers['user-agent'],
                 referer: request.headers.referer || request.headers.referrer || '-',
                 http_ver: request.raw.req.httpVersion,

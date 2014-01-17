@@ -2,6 +2,7 @@ var path = require('path');
 var util = require('util');
 var moment = require('moment');
 var nodemailer = require("nodemailer");
+var url = require('url');
 
 var Console = require('./lib/console');
 var File = require('./lib/file');
@@ -393,7 +394,7 @@ exports.register = function (plugin, options, next) {
                 remote_ip: request.info.remoteAddress,
                 time: new Date(event.timestamp),
                 method: request.method.toUpperCase(),
-                url: request.url,
+                url: request.url.path,
                 agent: request.headers['user-agent'],
                 referer: request.headers.referer || request.headers.referrer || '-',
                 http_ver: request.raw.req.httpVersion,

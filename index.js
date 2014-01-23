@@ -416,7 +416,7 @@ exports.register = function (plugin, options, next) {
         });
 
         plugin.events.on('internalError', function (event, error) {
-            bucker.exception({ message: error.message, stack: error.trace });
+            bucker.exception({ message: error.message, stack: error.stack });
         });
     }
     // and attach ourselves to server.plugins.bucker

@@ -8,9 +8,10 @@ var Console = require('./lib/console');
 var File = require('./lib/file');
 var Syslog = require('./lib/syslog');
 var Logstash = require('./lib/logstash');
+var SplunkStorm = require('./lib/splunk');
 var UDP = require('./lib/udp');
 
-var types = ['console', 'file', 'syslog', 'logstash', 'udp'];
+var types = ['console', 'file', 'syslog', 'logstash', 'udp', 'splunk'];
 var levels = {
     debug: { num: 0, color: 'blue' },
     info: { num: 1, color: 'green' },
@@ -29,6 +30,7 @@ var Bucker = function (opts, mod) {
     self.files = {};
     self.syslog = {};
     self.logstash = {};
+    self.splunk = {};
     self.udp = {};
     self.console = {};
     self.handlers = { access: {}, debug: {}, info: {}, warn: {}, error: {}, exception: {}, stat: {} };
@@ -76,6 +78,13 @@ var Bucker = function (opts, mod) {
     } else {
         self._setDefaultHandler({ logstash: false }, 'logstash');
     }
+
+    if (opts.hasOwnProperty('splunk')) {
+        self._setDefaultHandler(opts.splunk, 'splunk');
+    } else {
+        self._setDefaultHandler({ splunk: false }, 'splunk');
+    }
+
 
     if (opts.hasOwnProperty('udp')) {
         self._setDefaultHandler(opts.udp, 'udp');
@@ -159,6 +168,16 @@ Bucker.prototype._setHandler = function (options, level) {
                 self.handlers[level].logstash = self.logstash[hash];
             }
         }
+        if (options.hasOwnProperty('splunk')) {
+            if (options.splunk === false) {
+                self.handlers[level].splunk = false;
+            } else {
+                hash = typeof options.splunk === 'string' ? options.splunk : JSON.stringify(options.splunk);
+                if (!self.splunk.hasOwnProperty(hash)) self.splunk[hash] = self.loggers.push(SplunkStorm(options.splunk, options.splunk.name || self.name)) - 1;
+                self.handlers[level].splunk = self.splunk[hash];
+            }
+        }
+
         if (options.hasOwnProperty('udp')) {
             if (options.udp === false) {
                 self.handlers[level].udp = false;

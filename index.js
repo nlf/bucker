@@ -393,8 +393,8 @@ exports.register = function (plugin, options, next) {
         event.tags = event.tags.filter(function (tag) {
             return !~['error', 'warn', 'info', 'debug'].indexOf(tag);
         });
+        if (tags.hapi && tags.error && event.data.msec) return; // ignore internal hapi message
         data = util.format(event.data);
-        if (tags.hapi && tags.handler && tags.error && data.msec) return; // ignore internal hapi message
         bucker.tags(event.tags)[level](data);
     };
 

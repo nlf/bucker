@@ -394,6 +394,7 @@ exports.register = function (plugin, options, next) {
             return !~['error', 'warn', 'info', 'debug'].indexOf(tag);
         });
         data = util.format(event.data);
+        if (tags.hapi && tags.handler && tags.error && data.msec) return; // ignore internal hapi message
         bucker.tags(event.tags)[level](data);
     };
 

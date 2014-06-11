@@ -34,7 +34,12 @@ var Bucker = function (options, parent) {
         availableTransports[name] = Path.join(__dirname, 'transports', files[i]);
     }
 
-    var requestedTransports = Object.keys(options).filter(function (key) { return ['email', 'level', 'name'].indexOf(key) === -1; });
+    // see what transports they've configured
+    var requestedTransports = Object.keys(options).filter(function (key) {
+        return ['email', 'level', 'name'].indexOf(key) === -1 &&
+            Object.keys(availableTransports).indexOf(key) !== -1;
+    });
+
     // add the console transport if no others were specified
     if (requestedTransports.length === 0) {
         requestedTransports.push('console');
@@ -47,7 +52,7 @@ var Bucker = function (options, parent) {
         for (il = 0, ll = transports.length; il < ll; il++) {
             var opts = transports[il] || {};
             opts.level = opts.hasOwnProperty('level') ? Utils.validateLevel(opts.level) : options.level;
-            this.transports.push(new require(availableTransports[key])(this.events, Utils.levels, opts, this.name));
+            this.transports.push(new require(availableTransports[key])(this.events, Utils.levels, opts));
         }
     }
 };
@@ -59,7 +64,7 @@ var generateLevel = function (level) {
 
         // only emit if we have a listener, otherwise just do nothing
         if (this.events.listeners(level).length) {
-            this.events.emit(level, Moment(), arguments);
+            this.events.emit(level, this.name, Moment(), arguments);
         }
 
         return this;
@@ -93,6 +98,7 @@ Bucker.prototype.tags = function (tags) {
     return newBucker;
 };
 
+// send this log message via email
 Bucker.prototype.email = function (options) {
 
     var opts = options || this.emailOptions;
@@ -107,6 +113,7 @@ Bucker.prototype.email = function (options) {
 
 };
 
+// create an instance of Bucker
 exports.createLogger = function (options, parent) {
 
     return new Bucker(options, parent);

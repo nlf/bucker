@@ -24,6 +24,7 @@ var Bucker = function (options, parent) {
     this.transports = [];
     this.name = options.name || Utils.getNameFromParent(parent);
     this.emailOptions = options.email;
+    this.tags = [];
 
     var i, l, il, ll;
     // register available transports
@@ -52,7 +53,7 @@ var Bucker = function (options, parent) {
         for (il = 0, ll = transports.length; il < ll; il++) {
             var opts = transports[il] || {};
             opts.level = opts.hasOwnProperty('level') ? Utils.validateLevel(opts.level) : options.level;
-            this.transports.push(new require(availableTransports[key])(this.events, Utils.levels, opts));
+            this.transports.push(new (require(availableTransports[key]))(this.events, opts));
         }
     }
 };
@@ -64,7 +65,7 @@ var generateLevel = function (level) {
 
         // only emit if we have a listener, otherwise just do nothing
         if (this.events.listeners(level).length) {
-            this.events.emit(level, this.name, Moment(), arguments);
+            this.events.emit(level, this.name, Moment(), this.tags, Array.prototype.slice.call(arguments));
         }
 
         return this;
@@ -103,11 +104,11 @@ Bucker.prototype.email = function (options) {
 
     var opts = options || this.emailOptions;
     if (!opts) {
-        this.warn('Tried to use email() without configuring');
+        this.module('bucker').warn('Tried to use email() without configuring');
         return this;
     }
     if (!Nodemailer) {
-        this.warn('Tried to use email() but nodemailer is not installed');
+        this.module('bucker').warn('Tried to use email() but nodemailer is not installed');
         return this;
     }
 

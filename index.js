@@ -51,7 +51,11 @@ var Bucker = function (options, parent) {
         var key = requestedTransports[i];
         var transports = [].concat(options[key]);
         for (il = 0, ll = transports.length; il < ll; il++) {
-            var opts = transports[il] || {};
+            var opts = transports[il];
+            if (opts === false) {
+                continue;
+            }
+            opts = opts === true ? {} : opts || {};
             opts.level = opts.hasOwnProperty('level') ? Utils.validateLevel(opts.level) : options.level;
             this.transports.push(new (require(availableTransports[key]))(this.events, opts));
         }

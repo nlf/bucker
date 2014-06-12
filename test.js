@@ -4,4 +4,4 @@ var logger = bucker.createLogger({ console: true, influxdb: { host: '127.0.0.1',
 logger.log('hello', { test: 'data' }, 14);
 logger.module('bacon').log('hi again');
 logger.error('ruh roh').email();
-// logger.stat('something', 42);
+logger.stat('something', 42);

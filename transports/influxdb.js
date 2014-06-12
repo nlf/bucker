@@ -18,7 +18,7 @@ InfluxDB.prototype.stat = function (name, timestamp, tags, data) {
     var self = this;
 
     self.client.ref(); // make sure we send this packet
-    var payload = JSON.stringify([{ name: data[0], columns: ['value', 'time'], points: [[ data[1], +timestamp ]] }]);
+    var payload = JSON.stringify([{ name: data[0], columns: ['value', 'time'], points: [[ data[1], timestamp.unix() ]] }]);
     var packet = new Buffer(payload);
 
     self.client.send(packet, 0, packet.length, self.options.port, self.options.host, function () {

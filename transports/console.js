@@ -17,8 +17,12 @@ var Console = BaseTransport.extend(function () {
         this.options.timestamp = 'HH:mm:ss';
     }
 
-    if (!this.options.hasOwnProperty('format')) {
+    if (!this.options.format) {
         this.options.format = ':time :level:tags: :data';
+    }
+
+    if (!this.options.accessFormat) {
+        this.options.accessFormat = ':time :level:tags: :method :url :status :res_time';
     }
 });
 
@@ -59,9 +63,25 @@ Console.prototype.exception = function (name, timestamp, tags, data) {
     return console.log(this._format('exception', name, timestamp, tags, data));
 };
 
-// Console.prototype.access = function (name, timestamp, tags, data) {
-// };
-//
+Console.prototype.access = function (name, timestamp, tags, data) {
+
+    var line = this.options.accessFormat;
+    line = line.replace(':time', this.options.timestamp ? timestamp.format(this.options.timestamp) : '');
+    line = line.replace(':level', Chalk[colors.access](name ? name + '.access' : 'access'));
+    line = line.replace(':tags', tags.length ? Chalk.gray('[' + tags.join(',') + ']') : '');
+    line = line.replace(':method', data[0].method);
+    line = line.replace(':remote', data[0].remote_ip);
+    line = line.replace(':url', data[0].url);
+    line = line.replace(':http_ver', data[0].http_ver);
+    line = line.replace(':status', data[0].status);
+    line = line.replace(':res_time', data[0].response_time);
+    line = line.replace(':length', data[0].length);
+    line = line.replace(':referer', data[0].referer);
+    line = line.replace(':agent', data[0].agent);
+
+    return console.log(line);
+};
+
 // Console.prototype.stat = function (name, timestamp, tags, data) {
 // };
 

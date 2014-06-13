@@ -24,7 +24,7 @@ var Bucker = function (options, parent) {
     this.transports = [];
     this.name = options.name || Utils.getNameFromParent(parent);
     this.emailOptions = options.email;
-    this.tags = [];
+    this._tags = [];
 
     var i, l, il, ll;
     // register available transports
@@ -69,7 +69,7 @@ var generateLevel = function (level) {
 
         // only emit if we have a listener, otherwise just do nothing
         if (this.events.listeners(level).length) {
-            this.events.emit(level, this.name, Moment(), this.tags, Array.prototype.slice.call(arguments));
+            this.events.emit(level, this.name, Moment(), this._tags, Array.prototype.slice.call(arguments));
         }
 
         return this;
@@ -98,7 +98,7 @@ Bucker.prototype.module = function (mod) {
 Bucker.prototype.tags = function (tags) {
     
     var newBucker = Utils.clone(this);
-    newBucker.tags = tags;
+    newBucker._tags = tags;
 
     return newBucker;
 };
@@ -131,6 +131,7 @@ exports.createNullLogger = function () {
 };
 
 // hapi plugin
+exports.name = 'bucker';
 exports.register = function (plugin, options, next) {
 
     var bucker;
@@ -139,12 +140,11 @@ exports.register = function (plugin, options, next) {
         options = bucker.options;
     }
     else {
-        bucker = new Bucker(options);
+        bucker = exports.createLogger(options);
     }
 
     var log = function (event, tags) {
 
-        var data;
         var level = 'info'; // default level
 
         if (tags.debug) {
@@ -167,8 +167,11 @@ exports.register = function (plugin, options, next) {
         if (tags.hapi && tags.error && ((event.data && event.data.msec) || tags.unauthenticated)) {
             return; // ignore weird internal hapi errors
         }
+        if (tags.hapi && (tags.handler || tags.received)) {
+            return;
+        }
 
-        return bucker.tags(eventTags)[level](data);
+        return bucker.tags(eventTags)[level](event.data);
     };
 
     plugin.events.on('request', function (request, event, tags) {
@@ -181,7 +184,7 @@ exports.register = function (plugin, options, next) {
                 method: request.method.toUpperCase(),
                 url: request.url.path,
                 agent: request.headers['user-agent'],
-                referer: request.headers.referer || request.header.referrer || '-',
+                referer: request.headers.referer || request.headers.referrer || '-',
                 http_ver: request.raw.req.httpVersion,
                 length: request.response.headers['content-length'],
                 status: request.response.statusCode,

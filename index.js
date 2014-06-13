@@ -129,3 +129,80 @@ exports.createNullLogger = function () {
 
     return new Bucker({ console: false });
 };
+
+// hapi plugin
+exports.register = function (plugin, options, next) {
+
+    var bucker;
+    if (options instanceof Bucker) {
+        bucker = options;
+        options = bucker.options;
+    }
+    else {
+        bucker = new Bucker(options);
+    }
+
+    var log = function (event, tags) {
+
+        var data;
+        var level = 'info'; // default level
+
+        if (tags.debug) {
+            level = 'debug';
+        }
+        if (tags.info) {
+            level = 'info';
+        }
+        if (tags.warn || tags.warning) {
+            level = 'warn';
+        }
+        if (tags.error) {
+            level = 'error';
+        }
+        if (tags.exception) {
+            level = 'exception';
+        }
+
+        var eventTags = event.tags.filter(function (tag) { return Utils.levels.indexOf(tag) === -1; });
+        if (tags.hapi && tags.error && ((event.data && event.data.msec) || tags.unauthenticated)) {
+            return; // ignore weird internal hapi errors
+        }
+
+        return bucker.tags(eventTags)[level](data);
+    };
+
+    plugin.events.on('request', function (request, event, tags) {
+
+        if (tags.hapi && tags.response) { // access log event
+
+            return bucker.access({
+                remote_ip: request.info.remoteAddress,
+                time: Moment(event.timestamp),
+                method: request.method.toUpperCase(),
+                url: request.url.path,
+                agent: request.headers['user-agent'],
+                referer: request.headers.referer || request.header.referrer || '-',
+                http_ver: request.raw.req.httpVersion,
+                length: request.response.headers['content-length'],
+                status: request.response.statusCode,
+                response_time: +Moment() - request.info.received + 'ms'
+            });
+        }
+
+        return log(event, tags);
+    });
+
+    plugin.events.on('log', function (event, tags) {
+
+        return log(event, tags);
+    });
+
+    plugin.events.on('internalError', function (event, error) {
+
+        return bucker.exception({ message: error.message, stack: error.stack });
+    });
+
+    plugin.expose(bucker);
+
+    return next();
+};

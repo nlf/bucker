@@ -377,6 +377,7 @@ Bucker.prototype.email = function () {
 };
 
 // Hapi plugin
+exports.name = 'bucker';
 exports.register = function (plugin, options, next) {
     // get/make bucker object
     var bucker;

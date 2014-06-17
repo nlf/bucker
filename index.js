@@ -131,7 +131,6 @@ exports.createNullLogger = function () {
 };
 
 // hapi plugin
-exports.name = 'bucker';
 exports.register = function (plugin, options, next) {
 
     var bucker;
@@ -209,3 +208,4 @@ exports.register = function (plugin, options, next) {
 
     return next();
 };
+exports.register.attributes = { pkg: require('./package.json') };

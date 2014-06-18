@@ -444,6 +444,9 @@ exports.register = function (plugin, options, next) {
     plugin.expose(bucker);
     return next();
 };
+exports.register.attributes = {
+    pkg: require('./package.json')
+};
 
 exports.createLogger = function (options, mod) {
     return new Bucker(options, mod);

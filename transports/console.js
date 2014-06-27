@@ -33,7 +33,7 @@ Console.prototype._format = function (level, name, timestamp, tags, data) {
     line = line.replace(':time', this.options.timestamp ? timestamp.format(this.options.timestamp) : '');
     line = line.replace(':level', Chalk[color](name ? name + '.' + level : level));
     line = line.replace(':tags', tags.length ? Chalk.gray('[' + tags.join(',') + ']') : '');
-    line = line.replace(':data', data.map(function (chunk) { return Util.format(chunk); }).join(' '));
+    line = line.replace(':data', Util.format.apply(null, data));
 
     return this.options.color === false ? Chalk.stripColor(line) : line;
 };

@@ -22,7 +22,7 @@ var Console = BaseTransport.extend(function () {
     }
 
     if (!this.options.accessFormat) {
-        this.options.accessFormat = ':time :level:tags: :method :url :status :res_time';
+        this.options.accessFormat = ':time :level:tags: :method :url :status :response_time';
     }
 });
 
@@ -70,11 +70,11 @@ Console.prototype.access = function (name, timestamp, tags, data) {
     line = line.replace(':level', Chalk[colors.access](name ? name + '.access' : 'access'));
     line = line.replace(':tags', tags.length ? Chalk.gray('[' + tags.join(',') + ']') : '');
     line = line.replace(':method', data[0].method);
-    line = line.replace(':remote', data[0].remote_ip);
+    line = line.replace(':remote_ip', data[0].remote_ip);
     line = line.replace(':url', data[0].url);
     line = line.replace(':http_ver', data[0].http_ver);
     line = line.replace(':status', data[0].status);
-    line = line.replace(':res_time', data[0].response_time);
+    line = line.replace(':response_time', data[0].response_time);
     line = line.replace(':length', data[0].length);
     line = line.replace(':referer', data[0].referer);
     line = line.replace(':agent', data[0].agent);

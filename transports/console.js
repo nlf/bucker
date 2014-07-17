@@ -1,5 +1,6 @@
 var Util = require('util');
 var Chalk = require('chalk');
+var Joi = require('joi');
 var BaseTransport = require('../lib/baseTransport');
 
 var colors = {
@@ -12,22 +13,22 @@ var colors = {
     stat: 'gray'
 };
 
-var Console = BaseTransport.extend(function () {
-    if (!this.options.hasOwnProperty('timestamp') || this.options.timestamp === true) {
-        this.options.timestamp = 'HH:mm:ss';
-    }
+var Console = BaseTransport.extend();
 
-    if (!this.options.format) {
-        this.options.format = ':time :level:tags: :data';
-    }
+Console.prototype.validate = function (options, callback) {
 
-    if (!this.options.accessFormat) {
-        this.options.accessFormat = ':time :level:tags: :method :url :status :response_time';
-    }
-});
+    var schema = Joi.object().keys({
+        timestamp: Joi.string().default('HH:mm:ss'),
+        format: Joi.string().default(':time :level:tags: :data'),
+        accessFormat: Joi.string().default(':time :level:tags: :method :url :status :response_time')
+    });
+
+    schema.validate(options, callback);
+};
 
 Console.prototype._format = function (level, name, timestamp, tags, data) {
 
+    console.log(this);
     var color = colors[level];
     var line = this.options.format;
     line = line.replace(':time', this.options.timestamp ? timestamp.format(this.options.timestamp) : '');
@@ -81,8 +82,5 @@ Console.prototype.access = function (name, timestamp, tags, data) {
 
     return console.log(line);
 };
-
-// Console.prototype.stat = function (name, timestamp, tags, data) {
-// };
 
 module.exports = Console;

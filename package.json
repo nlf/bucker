@@ -16,8 +16,9 @@
   "author": "Nathan LaFreniere <quitlahok@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "moment": "^2.6.0",
-    "chalk": "^0.4.0"
+    "chalk": "^0.4.0",
+    "joi": "^4.6.1",
+    "moment": "^2.6.0"
   },
   "optionalDependencies": {
     "nodemailer": "^0.6.5"

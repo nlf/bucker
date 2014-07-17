@@ -1,17 +1,21 @@
 var Dgram = require('dgram');
+var Joi = require('joi');
 
 var InfluxDB = require('../lib/baseTransport').extend(function () {
-    if (!this.options.host) {
-        this.options.host = '127.0.0.1';
-    }
-
-    if (!this.options.port) {
-        this.options.port = 5551;
-    }
 
     this.client = Dgram.createSocket('udp4');
     this.client.unref(); // don't hold the process open
 });
+
+InfluxDB.prototype.validate = function (options, callback) {
+
+    var schema = Joi.object().keys({
+        host: Joi.string().hostname().default('127.0.0.1'),
+        port: Joi.number().integer().default(5551)
+    });
+
+    schema.validate(options, callback);
+};
 
 InfluxDB.prototype.stat = function (name, timestamp, tags, data) {
 

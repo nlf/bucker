@@ -47,6 +47,11 @@ var Bucker = function (options, parent) {
         requestedTransports.push('console');
     }
 
+    var loadTransport = function (transport) {
+
+        this.transports.push(new transport(this.events, opts));
+    }.bind(this);
+
     // load requested transports
     for (i = 0, l = requestedTransports.length; i < l; i++) {
 
@@ -61,7 +66,7 @@ var Bucker = function (options, parent) {
 
             opts = opts === true ? {} : opts || {};
             opts.level = opts.hasOwnProperty('level') ? Utils.validateLevel(opts.level) : options.level;
-            this.transports.push(new (require(availableTransports[key]))(this.events, opts));
+            loadTransport(opts.transport || require(availableTransports[key]));
         }
     }
 };

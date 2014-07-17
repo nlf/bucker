@@ -1,22 +1,24 @@
 var Util = require('util');
 var Fs = require('fs');
+var Joi = require('joi');
 var BaseTransport = require('../lib/baseTransport');
 
 var File = BaseTransport.extend(function () {
-    if (!this.options.hasOwnProperty('timestamp') || this.options.timestamp === true) {
-        this.options.timestamp = 'YYYY-MM-DDTHH:mm:ss';
-    }
 
-    if (!this.options.format) {
-        this.options.format = ':time :level:tags: :data';
-    }
-
-    if (!this.options.accessFormat) {
-        this.options.accessFormat = ':remote_ip - - [:time] ":method :url HTTP/:http_ver" :status :length :response_time ":referer" ":agent"';
-    }
-
-    this.filestream = Fs.createWriteStream(this.options.file, { encoding: 'utf8', flags: 'a+' });
+    this.filestream = Fs.createWriteStream(this.options.filename, { encoding: 'utf8', flags: 'a+' });
 });
+
+File.prototype.validate = function (options, callback) {
+
+    var schema = Joi.object().keys({
+        timestamp: Joi.string().default('YYYY-MM-DDTHH:mm:ss'),
+        format: Joi.string().default(':time :level:tags: :data'),
+        accessFormat: Joi.string().default(':remote_ip - - [:time] ":method :url HTTP/:http_ver" :status :length :response_time ":referer" ":agent"'),
+        filename: Joi.string().required()
+    });
+
+    schema.validate(options, callback);
+};
 
 File.prototype._write = function (line) {
 
@@ -77,8 +79,5 @@ File.prototype.access = function (name, timestamp, tags, data) {
 
     return this._write(line);
 };
-
-// File.prototype.stat = function (name, timestamp, tags, data) {
-// };
 
 module.exports = File;

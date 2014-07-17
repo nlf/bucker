@@ -55,12 +55,12 @@ Console.prototype.warn = function (name, timestamp, tags, data) {
 
 Console.prototype.error = function (name, timestamp, tags, data) {
 
-    return console.log(this._format('error', name, timestamp, tags, data));
+    return console.error(this._format('error', name, timestamp, tags, data));
 };
 
 Console.prototype.exception = function (name, timestamp, tags, data) {
 
-    return console.log(this._format('exception', name, timestamp, tags, data));
+    return console.error(this._format('exception', name, timestamp, tags, data));
 };
 
 Console.prototype.access = function (name, timestamp, tags, data) {

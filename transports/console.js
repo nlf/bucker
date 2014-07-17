@@ -28,7 +28,6 @@ Console.prototype.validate = function (options, callback) {
 
 Console.prototype._format = function (level, name, timestamp, tags, data) {
 
-    console.log(this);
     var color = colors[level];
     var line = this.options.format;
     line = line.replace(':time', this.options.timestamp ? timestamp.format(this.options.timestamp) : '');

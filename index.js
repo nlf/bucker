@@ -16,6 +16,7 @@ var Bucker = function (options, parent) {
         parent = options;
         options = {};
     }
+
     options = options || {};
     options.level = Utils.validateLevel(options.level);
 
@@ -48,13 +49,16 @@ var Bucker = function (options, parent) {
 
     // load requested transports
     for (i = 0, l = requestedTransports.length; i < l; i++) {
+
         var key = requestedTransports[i];
         var transports = [].concat(options[key]);
         for (il = 0, ll = transports.length; il < ll; il++) {
+
             var opts = transports[il];
             if (opts === false) {
                 continue;
             }
+
             opts = opts === true ? {} : opts || {};
             opts.level = opts.hasOwnProperty('level') ? Utils.validateLevel(opts.level) : options.level;
             this.transports.push(new (require(availableTransports[key]))(this.events, opts));
@@ -78,6 +82,7 @@ var generateLevel = function (level) {
 
 // create the log level methods
 for (var i = 0, l = Utils.levels.length; i < l; i++) {
+
     Bucker.prototype[Utils.levels[i]] = generateLevel(Utils.levels[i]);
 }
 
@@ -111,6 +116,7 @@ Bucker.prototype.email = function (options) {
         this.module('bucker').warn('Tried to use email() without configuring');
         return this;
     }
+
     if (!Nodemailer) {
         this.module('bucker').warn('Tried to use email() but nodemailer is not installed');
         return this;
@@ -149,15 +155,19 @@ exports.register = function (plugin, options, next) {
         if (tags.debug) {
             level = 'debug';
         }
+
         if (tags.info) {
             level = 'info';
         }
+
         if (tags.warn || tags.warning) {
             level = 'warn';
         }
+
         if (tags.error) {
             level = 'error';
         }
+
         if (tags.exception) {
             level = 'exception';
         }
@@ -166,6 +176,7 @@ exports.register = function (plugin, options, next) {
         if (tags.hapi && tags.error && ((event.data && event.data.msec) || tags.unauthenticated)) {
             return; // ignore weird internal hapi errors
         }
+
         if (tags.hapi && (tags.handler || tags.received)) {
             return;
         }

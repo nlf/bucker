@@ -1,4 +1,3 @@
-/* eslint new-cap:0, camelcase: 0, consistent-return: 0, no-use-before-define: 0 */
 var EventEmitter = require('events').EventEmitter;
 var Path = require('path');
 var Fs = require('fs');

@@ -142,6 +142,8 @@ exports.createNullLogger = function () {
     return new Bucker({ console: false });
 };
 
+exports.BaseTransport = require('./lib/baseTransport');
+
 // hapi plugin
 exports.register = function (plugin, options, next) {
 
@@ -225,4 +227,5 @@ exports.register = function (plugin, options, next) {
 
     return next();
 };
+
 exports.register.attributes = { pkg: require('./package.json') };

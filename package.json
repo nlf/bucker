@@ -17,6 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "chalk": "^0.4.0",
+    "hoek": "^2.3.0",
     "joi": "^4.6.1",
     "moment": "^2.6.0"
   },

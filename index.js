@@ -1,3 +1,4 @@
+/* eslint new-cap:0, camelcase: 0, consistent-return: 0, no-use-before-define: 0 */
 var EventEmitter = require('events').EventEmitter;
 var Path = require('path');
 var Fs = require('fs');
@@ -18,7 +19,6 @@ var Bucker = function (options, parent) {
     }
 
     options = options || {};
-    options.level = Utils.validateLevel(options.level);
 
     // initial state
     this.events = new EventEmitter();
@@ -65,7 +65,7 @@ var Bucker = function (options, parent) {
             }
 
             opts = opts === true ? {} : opts || {};
-            opts.level = opts.hasOwnProperty('level') ? Utils.validateLevel(opts.level) : options.level;
+            opts.level = opts.hasOwnProperty('level') ? Utils.validateLevel(opts.level) : Utils.validateLevel(options.level);
             loadTransport(opts.transport || require(availableTransports[key]));
         }
     }

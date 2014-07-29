@@ -196,6 +196,10 @@ exports.register = function (plugin, options, next) {
 
         if (tags.hapi && tags.response) { // access log event
 
+            if (tags.auth) {
+                return;
+            }
+
             return bucker.access({
                 remote_ip: request.info.remoteAddress,
                 time: Moment(event.timestamp),

@@ -46,9 +46,10 @@ var Bucker = function (options, parent) {
         requestedTransports.push('console');
     }
 
-    var loadTransport = function (transport) {
+    var loadTransport = function (Transport, opts) {
 
-        this.transports.push(new transport(this.events, opts));
+        var transport = new Transport(this.events, opts);
+        this.transports.push(transport);
     }.bind(this);
 
     // load requested transports
@@ -65,7 +66,7 @@ var Bucker = function (options, parent) {
 
             opts = opts === true ? {} : opts || {};
             opts.level = opts.hasOwnProperty('level') ? Utils.validateLevel(opts.level) : Utils.validateLevel(options.level);
-            loadTransport(opts.transport || require(availableTransports[key]));
+            loadTransport(opts.transport || require(availableTransports[key]), opts);
         }
     }
 };

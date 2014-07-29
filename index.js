@@ -38,7 +38,8 @@ var Bucker = function (options, parent) {
     // see what transports they've configured
     var requestedTransports = Object.keys(options).filter(function (key) {
         return ['email', 'level', 'name'].indexOf(key) === -1 &&
-            Object.keys(availableTransports).indexOf(key) !== -1;
+            (Object.keys(availableTransports).indexOf(key) !== -1 ||
+             typeof options[key].transport === 'function');
     });
 
     // add the console transport if no others were specified

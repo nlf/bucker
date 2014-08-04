@@ -130,6 +130,37 @@ Bucker.prototype.email = function (options) {
 
 };
 
+// Create Middleware for express
+Bucker.prototype.middleware = function () {
+    var self = this;
+
+    return function (req, res, next) {
+        var end = res.end;
+        var access = {
+            remote_ip: req.ip || req.socket.remoteAddress || req.socket.socket.remoteAddress,
+            time: new Date(),
+            method: req.method,
+            url: req.originalUrl || req.url,
+            http_ver: req.httpVersion,
+            referer: req.headers.referer || req.headers.referrer || '-',
+            agent: req.headers['user-agent'],
+            length: 0,
+            status: 0,
+            response_time: Date.now()
+        };
+
+        res.end = function (chunk, encoding) {
+            access.response_time = String(Date.now() - access.response_time) + 'ms';
+            res.end = end;
+            res.end(chunk, encoding);
+            access.length = res._headers['content-length'] || 0;
+            access.status = res.statusCode;
+            self.access(access);
+        };
+        next();
+    };
+};
+
 // create an instance of Bucker
 exports.createLogger = function (options, parent) {
 

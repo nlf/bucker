@@ -46,7 +46,7 @@ Loggly.prototype._send = function (level, name, timestamp, tags, data) {
         payload.message = data;
     }
 
-    self.client.log(payload);
+    self.client.log(JSON.stringify(payload));
 };
 
 Loggly.prototype.stat = function (name, timestamp, tags, data) {

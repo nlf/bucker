@@ -45,7 +45,6 @@ Loggly.prototype._send = function (level, name, timestamp, tags, data) {
     } else {
         payload.message = data;
     }
-    console.log('Logging to LOGGLY', payload);
 
     self.client.log(payload);
 };

@@ -7,6 +7,7 @@
  *      token: 'YOUR LOGGLY TOKEN',
  *      subdomain: 'YOURSUBDOMAIN',
  *      tags: [ 'Optional', 'Tags'],
+ *      json: true,
  *    }
  */
 'use strict';
@@ -24,7 +25,21 @@ var Loggly = BaseTransport.extend(function () {
 Loggly.prototype.validate = function (options, callback) {
     var loggly = require('loggly');
     this.client = loggly.createClient(options);
+    this.options = options;
     callback();
+};
+
+/**
+ * Format an Error object
+ */
+Loggly.prototype.formatError = function (err) {
+    return {
+        msg: err.message,
+        stack: err.stack,
+        args: err.arguments,
+        type: err.type,
+        name: err.name,
+    };
 };
 
 /**
@@ -32,28 +47,32 @@ Loggly.prototype.validate = function (options, callback) {
  */
 Loggly.prototype._send = function (level, name, timestamp, tags, data) {
     var self = this;
-    var payload = {
-        '@timestamp': timestamp.toISOString(),
-        '@level': level,
-        '@name': name,
-        '@tags': tags,
-    };
+
     if (!Array.isArray(data)){
         data = [data];
     }
 
     // Process each message
     data.forEach(function(msg){
+        var payload = {
+            '@timestamp': timestamp.toISOString(),
+            '@level': level,
+            '@name': name,
+            '@tags': tags,
+        };
 
         if (typeof msg === 'object'){
             Object.keys(msg).forEach(function(k){
-                payload[k] = msg[k];
+                var val = msg[k];
+                if (val instanceof Error){
+                    val = self.formatError(val);
+                }
+                payload[k] = val;
             });
         } else {
             payload.message = util.format(msg);
         }
-
-        self.client.log(JSON.stringify(payload));
+        self.client.log(payload);
     });
 };
 

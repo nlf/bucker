@@ -147,14 +147,7 @@ exports.BaseTransport = require('./lib/baseTransport');
 // hapi plugin
 exports.register = function (plugin, options, next) {
 
-    var bucker;
-    if (options instanceof Bucker) {
-        bucker = options;
-        options = bucker.options;
-    }
-    else {
-        bucker = exports.createLogger(options);
-    }
+    var bucker = options instanceof Bucker ? options : exports.createLogger(options);
 
     var log = function (event, tags) {
 
@@ -232,4 +225,6 @@ exports.register = function (plugin, options, next) {
     return next();
 };
 
-exports.register.attributes = { pkg: require('./package.json') };
+exports.register.attributes = {
+    pkg: require('./package.json')
+};

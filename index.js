@@ -419,10 +419,14 @@ exports.register = function (plugin, options, next) {
                 agent: request.headers['user-agent'],
                 referer: request.headers.referer || request.headers.referrer || '-',
                 http_ver: request.raw.req.httpVersion,
-                length: request.response.headers['content-length'],
-                status: request.response.statusCode,
                 response_time: new Date().getTime() - request.info.received + 'ms'
             };
+            if (request.raw.res) {
+                if (request.raw.res._headers) {
+                    access.length = request.raw.res._headers['content-length'] || 0;
+                }
+                access.status = request.raw.res.statusCode;
+            }
             return bucker.access(access);
         }
         //If we have an explicitly defined tag that is a loglevel, log it.

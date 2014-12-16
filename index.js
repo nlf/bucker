@@ -377,7 +377,7 @@ Bucker.prototype.email = function () {
 };
 
 // Hapi plugin
-exports.register = function (plugin, options, next) {
+exports.register = function (server, options, next) {
     // get/make bucker object
     var bucker;
 
@@ -407,7 +407,7 @@ exports.register = function (plugin, options, next) {
     }
 
     // access logger
-    plugin.events.on('request', function (request, event, tags) {
+    server.on('request', function (request, event, tags) {
         var level;
         //First check for hapi response events
         if (tags.hapi && tags.response) {
@@ -432,16 +432,16 @@ exports.register = function (plugin, options, next) {
     });
     // add listener by default but dont if its false
     if (!options.hapi || (options.hapi && options.hapi.handleLog)) {
-        plugin.events.on('log', function (event, tags, timestamp) {
+        server.on('log', function (event, tags, timestamp) {
             hapiLog(event, tags);
         });
 
-        plugin.events.on('internalError', function (event, error) {
+        server.on('internalError', function (event, error) {
             bucker.exception({ message: error.message, stack: error.stack });
         });
     }
     // and attach ourselves to server.plugins.bucker
-    plugin.expose(bucker);
+    server.expose(bucker);
     return next();
 };
 exports.register.attributes = {

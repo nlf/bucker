@@ -407,7 +407,7 @@ exports.register = function (plugin, options, next) {
     }
 
     // access logger
-    plugin.events.on('request', function (request, event, tags) {
+    plugin.on('request', function (request, event, tags) {
         var level;
         //First check for hapi response events
         if (tags.hapi && tags.response) {
@@ -432,11 +432,11 @@ exports.register = function (plugin, options, next) {
     });
     // add listener by default but dont if its false
     if (!options.hapi || (options.hapi && options.hapi.handleLog)) {
-        plugin.events.on('log', function (event, tags, timestamp) {
+        plugin.on('log', function (event, tags, timestamp) {
             hapiLog(event, tags);
         });
 
-        plugin.events.on('internalError', function (event, error) {
+        plugin.on('internalError', function (event, error) {
             bucker.exception({ message: error.message, stack: error.stack });
         });
     }

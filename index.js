@@ -216,7 +216,7 @@ exports.register = function (plugin, options, next) {
         return bucker.tags(eventTags)[level](event.data);
     };
 
-    plugin.events.on('request', function (request, event, tags) {
+    plugin.on('request', function (request, event, tags) {
 
         if (tags.hapi && tags.response) { // access log event
 
@@ -241,12 +241,12 @@ exports.register = function (plugin, options, next) {
         return log(event, tags);
     });
 
-    plugin.events.on('log', function (event, tags) {
+    plugin.on('log', function (event, tags) {
 
         return log(event, tags);
     });
 
-    plugin.events.on('internalError', function (event, error) {
+    plugin.on('internalError', function (event, error) {
 
         return bucker.exception({ message: error.message, stack: error.stack });
     });

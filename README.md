@@ -66,6 +66,13 @@ apiLogged.someMethod(); //=> logs '[someMethod was called]' with the logger
 The null logger implements all the methods of a bucker logger's public API, so it's methods can be called, chained, etc as normal with no ill-effect.
 
 
+Example
+=======
+
+* In order to run the example just ```cd example && npm i && npm start```
+* inside the example there's a Redis example, you'll have to install Redis locally or config the example with the host and ip.
+
+
 Frontend Usage
 ==============
 
@@ -117,14 +124,9 @@ In addition to the 'app' option, individual configurations may be set for each l
 }
 ```
 
-Example
-=======
-
-* In order to run the example just ```cd example && npm i && npm start```
-* inside the example there's a Redis example, you'll have to install Redis locally or config the example with the host and ip.
-
 Note that the format and timestamp options are not available to the syslog facility, though they are available to file and console. the accessFormat option is available for every transport. Timestamp may be set to false to prevent timestamps from being printed. Obviously, the filename option is exclusive to the file transport. Additionally, the color option is exclusive to the console transport and the facility, host, and port options to the syslog transport.
 
 None of the format options are available to the logstash transport, since it sends logs using logstash's internal format.
 
 If you have questions, feature requests, or comments, please create an issue and I'll respond to them as soon as I'm able.
+

@@ -16,16 +16,20 @@
   "author": "Nathan LaFreniere <quitlahok@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "mkdirp": "~0.3.5",
     "colors": "~0.6.0",
+    "mkdirp": "~0.3.5",
     "moment": "~2.1.0",
-    "nodemailer": "~0.5.2"
-  },
-  "devDependencies": {
-    "precommit-hook": "",
-    "express": ""
+    "nodemailer": "~0.5.2",
+    "redis": "^0.12.1"
   },
   "scripts": {
-    "test": "node test.js"
-  }
+    "test": "node test.js",
+    "lint": "jshint .",
+    "validate": "npm ls"
+  },
+  "pre-commit": [
+    "lint",
+    "validate",
+    "test"
+  ]
 }

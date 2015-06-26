@@ -1,2 +1,7 @@
 node_modules
 *.log
+example/access.log
+example/error.log
+example/dump.rdp
+example/npm-debug.log
+example/node_modules

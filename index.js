@@ -306,6 +306,9 @@ Bucker.prototype.middleware = function () {
             agent: req.headers['user-agent'],
             length: 0,
             status: 0,
+            // Some Frameworks (such as express) provide a User object available
+            // on the request object. This can be very useful for logging
+            user: req.user,
             response_time: Date.now()
         };
 

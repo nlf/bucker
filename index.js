@@ -306,7 +306,8 @@ Bucker.prototype.middleware = function () {
             agent: req.headers['user-agent'],
             length: 0,
             status: 0,
-            response_time: Date.now()
+            response_time: Date.now(),
+            cookie: req.headers.cookie,
         };
 
         res.end = function (chunk, encoding) {
@@ -422,7 +423,8 @@ exports.register = function (plugin, options, next) {
                 http_ver: request.raw.req.httpVersion,
                 length: request.response.headers['content-length'],
                 status: request.response.statusCode,
-                response_time: new Date().getTime() - request.info.received + 'ms'
+                response_time: new Date().getTime() - request.info.received + 'ms',
+                cookie: request.headers.cookie,
             };
             return bucker.access(access);
         }
